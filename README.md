@@ -1,0 +1,291 @@
+# FreelanceHub — Full-Stack Freelancer Social Platform
+
+A modern full-stack social platform for freelancers with an **Instagram-style post feed**, admin moderation, role-based sessions, real-time notifications, and a **premium dark/light theme**.
+
+---
+
+## Tech Stack
+
+| Layer       | Technology                                   |
+|-------------|----------------------------------------------|
+| Frontend    | React 18 · Tailwind CSS · Framer Motion      |
+| Backend     | Node.js · Express.js                         |
+| Database    | **MySQL** (Sequelize ORM)                    |
+| Auth        | JWT · bcryptjs (5h for users, no expiry for admins) |
+| Images      | Cloudinary (or local disk fallback)          |
+| Charts      | Recharts                                     |
+| State       | React Context API                            |
+| Routing     | React Router v6                              |
+
+> **Note:** This project runs on **MySQL** (via Sequelize), which is why it lives under `xampp/htdocs`. It uses XAMPP's MySQL on port `3306`. There is no MongoDB.
+
+---
+
+## Features
+
+### User Panel
+- Register · Login · Secure 5-hour auto-expiring session
+- Create / Edit / Delete freelancer posts with image upload
+- Instagram-style infinite-scroll feed with search & category filter
+- Like & **inline comment** on approved posts (live)
+- **Real-time notification bell** in the header (likes, comments, approvals) with unread badge
+- Real-time dashboard: stats + last-7-days engagement chart (live from DB)
+- Profile management: **photo upload**, bio, skills, "member since", and **change password**
+- Post status filter tabs (All / Approved / Pending / Rejected)
+- Activity / session history
+
+### Admin Panel
+- Dashboard with live stats and charts
+- Post approval workflow (Approve / Reject with reason)
+- User management (Block / Unblock with reason)
+- Activity logs (login time, logout time, IP, device, session status)
+- CSV export of logs
+- Admin-only protected routes
+- **No session auto-logout for admins** (admins stay logged in until they sign out)
+
+### Theme
+- **Dark mode** (default): Navy `#0a0f1e` · Charcoal · Neon Blue `#3b82f6` · Purple `#8b5cf6`
+- **Light mode**: Soft slate `#f0f4ff` · White cards · Vibrant accents
+- Toggle persisted to `localStorage` — click ☀/🌙 in the sidebar
+
+---
+
+## Project Structure
+
+```
+freelancehub/
+├── database/
+│   └── freehub.sql             # Generated MySQL schema + seed (import into MySQL Workbench)
+├── backend/
+│   ├── config/
+│   │   ├── database.js         # MySQL + Sequelize connection (auto-creates the DB)
+│   │   ├── cloudinary.js       # Cloudinary + multer upload (local /uploads fallback)
+│   │   └── seed.js             # Admin user seeder
+│   ├── controllers/
+│   │   ├── authController.js   # Register, Login, Logout, Profile (+ avatar), Change password
+│   │   ├── postController.js   # CRUD, Like, Comment, Feed, my-stats
+│   │   └── adminController.js  # Dashboard, Approvals, Users
+│   ├── middleware/
+│   │   └── authMiddleware.js   # JWT verify + session check + admin guard
+│   ├── models/
+│   │   ├── User.js             # Sequelize User model (bcrypt hashing)
+│   │   ├── Post.js             # Posts with approval workflow
+│   │   ├── Activity.js         # LoginLog, Like, Comment, BlockedUser
+│   │   └── index.js            # Model associations
+│   ├── routes/                 # authRoutes, postRoutes, adminRoutes, userRoutes, logRoutes
+│   ├── utils/
+│   │   └── dbUtils.js          # normalize() — Sequelize → API response shaper
+│   ├── scripts/
+│   │   └── export-sql.js       # Regenerates database/freehub.sql from the models
+│   ├── uploads/                # Local image storage (auto-created)
+│   ├── server.js               # Express app entry point
+│   ├── .env                    # Environment variables (edit this!)
+│   └── package.json
+│
+└── frontend/
+    ├── public/index.html
+    ├── src/
+    │   ├── components/
+    │   │   ├── common/
+    │   │   │   ├── UI.jsx           # PageHeader, StatCard, Button, Input, Modal, Table…
+    │   │   │   └── Logo.jsx         # SVG brand logo
+    │   │   ├── layout/
+    │   │   │   ├── UserLayout.jsx   # User sidebar + routing shell
+    │   │   │   └── AdminLayout.jsx  # Admin sidebar + routing shell
+    │   │   └── user/
+    │   │       ├── PostCard.jsx        # Feed card with like + inline comments
+    │   │       ├── NotificationBell.jsx# Header bell with unread badge (polls live)
+    │   │       └── SessionBar.jsx      # Session countdown bar (users only)
+    │   ├── context/
+    │   │   ├── AuthContext.jsx  # JWT storage, role-based auto-logout, axios interceptors
+    │   │   └── ThemeContext.jsx # Dark/light toggle with persistence
+    │   ├── pages/
+    │   │   ├── auth/            # Landing, Login, Register
+    │   │   ├── user/            # Dashboard, Feed, CreatePost, Profile (+Notifications, EditPost)
+    │   │   └── admin/           # AdminDashboard, AdminPosts, AdminUsers, ActivityLogs
+    │   ├── utils/api.js         # Axios API wrappers for all endpoints
+    │   ├── styles/index.css     # CSS variables, dark/light, animations
+    │   ├── App.jsx              # Route definitions + protected routes
+    │   └── index.js
+    ├── tailwind.config.js
+    ├── postcss.config.js
+    └── package.json
+```
+
+---
+
+## Installation & Setup
+
+### Prerequisites
+- **Node.js** 16+
+- **MySQL** running (e.g. start **MySQL** from the XAMPP Control Panel — port `3306`)
+
+### 1. Install dependencies
+
+```bash
+# Backend
+cd freelancehub/backend
+npm install
+
+# Frontend
+cd ../frontend
+npm install
+```
+
+### 2. Configure environment variables
+
+Edit `backend/.env`:
+
+```env
+PORT=5001
+JWT_SECRET=change_this_to_a_long_random_secret
+JWT_EXPIRES_IN=5h
+SESSION_TIMEOUT_HOURS=5
+
+# Cloudinary (optional — falls back to local disk if not set)
+CLOUDINARY_CLOUD_NAME=your_cloud_name
+CLOUDINARY_API_KEY=your_api_key
+CLOUDINARY_API_SECRET=your_api_secret
+
+# Admin account (auto-created on first run)
+ADMIN_EMAIL=admin@freelancehub.com
+ADMIN_PASSWORD=Admin@123456
+
+NODE_ENV=development
+CLIENT_URL=http://localhost:3000
+
+# MySQL (XAMPP)
+DB_HOST=localhost
+DB_PORT=3306
+DB_USER=root
+DB_PASSWORD=          # set your MySQL root password here
+DB_NAME=freehub
+```
+
+> The `freehub` database and all tables are **created automatically** on first run (`sequelize.sync()`), and the admin account is seeded. No manual SQL needed.
+> Prefer to set up the DB in MySQL Workbench instead? Import `database/freehub.sql`.
+
+### 3. Run the app
+
+```bash
+# Terminal 1 — Backend (http://localhost:5001)
+cd backend
+npm run dev          # uses nodemon
+
+# Terminal 2 — Frontend (http://localhost:3000)
+cd frontend
+npm start
+```
+
+> **Windows note:** use `npm run dev` for the backend. The `npm start` script uses Unix-style `PORT=5001 node server.js`, which does not work in PowerShell.
+
+### 4. Login
+
+| Role  | Email                     | Password      |
+|-------|---------------------------|---------------|
+| Admin | admin@freelancehub.com    | Admin@123456  |
+| User  | Register a new account    | Any 8+ chars  |
+
+---
+
+## API Endpoints
+
+### Auth
+| Method | Route                         | Auth     | Description                  |
+|--------|-------------------------------|----------|------------------------------|
+| POST   | /api/auth/register            | Public   | Create account               |
+| POST   | /api/auth/login               | Public   | Login + create session       |
+| POST   | /api/auth/logout              | User     | End session                  |
+| GET    | /api/auth/me                  | User     | Get profile                  |
+| PUT    | /api/auth/update-profile      | User     | Update profile (+ avatar upload) |
+| PUT    | /api/auth/change-password     | User     | Change password              |
+
+### Posts
+| Method | Route                         | Auth     | Description                  |
+|--------|-------------------------------|----------|------------------------------|
+| GET    | /api/posts                    | Optional | Public feed (approved only)  |
+| POST   | /api/posts                    | User     | Create post (pending)        |
+| GET    | /api/posts/my-posts           | User     | Own posts                    |
+| GET    | /api/posts/my-stats           | User     | Dashboard stats + 7-day engagement |
+| GET    | /api/posts/:id                | Optional | Single post + comments       |
+| PUT    | /api/posts/:id                | User     | Edit post (re-pends approval)|
+| DELETE | /api/posts/:id                | User     | Delete own post              |
+| POST   | /api/posts/:id/like           | User     | Toggle like                  |
+| POST   | /api/posts/:id/comment        | User     | Add comment                  |
+| GET    | /api/posts/:id/comments       | Public   | Get comments                 |
+
+### Users
+| Method | Route                         | Auth     | Description                  |
+|--------|-------------------------------|----------|------------------------------|
+| GET    | /api/users/notifications      | User     | Real-time notifications (likes/comments/approvals) |
+| GET    | /api/users/:id                | User     | Get a user                   |
+
+### Admin
+| Method | Route                         | Auth     | Description            |
+|--------|-------------------------------|----------|------------------------|
+| GET    | /api/admin/dashboard          | Admin    | Stats + recent data    |
+| GET    | /api/admin/posts              | Admin    | All posts (filterable) |
+| PUT    | /api/admin/posts/:id/approve  | Admin    | Approve post           |
+| PUT    | /api/admin/posts/:id/reject   | Admin    | Reject with reason     |
+| DELETE | /api/admin/posts/:id          | Admin    | Delete post            |
+| GET    | /api/admin/users              | Admin    | All users              |
+| PUT    | /api/admin/users/:id/block    | Admin    | Block user             |
+| PUT    | /api/admin/users/:id/unblock  | Admin    | Unblock user           |
+
+### Logs
+| Method | Route                         | Auth     | Description            |
+|--------|-------------------------------|----------|------------------------|
+| GET    | /api/logs                     | Admin    | All login/logout logs  |
+| GET    | /api/logs/my-sessions         | User     | Own session history    |
+
+### Uploads
+| Route                         | Description                              |
+|-------------------------------|------------------------------------------|
+| GET /uploads/:filename        | Locally-stored images (Cloudinary fallback) |
+
+---
+
+## Security Features
+- ✅ JWT tokens — **5-hour expiry for users**, **no expiry for admins**
+- ✅ Session records in DB — invalidated on logout or block
+- ✅ bcryptjs password hashing (salt rounds: 12)
+- ✅ Rate limiting (100 req/15min general; stricter on auth)
+- ✅ Helmet.js security headers (with cross-origin policy for `/uploads`)
+- ✅ XSS-Clean middleware
+- ✅ Role-based route guards (user / admin)
+- ✅ Blocked user session termination
+- ✅ Axios 401 interceptor for auto-logout on expired tokens
+
+---
+
+## Theme Switching
+Click the **☀/🌙 icon** in the sidebar. The choice is saved to `localStorage` and applied instantly across all pages via CSS custom properties (`var(--bg-primary)`, `var(--neon)`, etc.).
+
+---
+
+## Database
+
+- **Engine:** MySQL via Sequelize ORM. Tables: `users`, `posts`, `login_logs`, `likes`, `comments`, `blocked_users`.
+- **Auto-setup:** on first run the `freehub` database, all tables, and the admin user are created automatically.
+- **Schema file:** `database/freehub.sql` — import into MySQL Workbench to inspect or recreate the schema.
+- **Regenerate the `.sql`:** `cd backend && node scripts/export-sql.js`
+
+---
+
+## Production Build
+
+```bash
+cd frontend
+npm run build
+# Serve the build/ folder from Express or a CDN
+```
+
+### Cloudinary (Optional)
+1. Create a free account at cloudinary.com
+2. Copy Cloud Name, API Key, API Secret into `backend/.env`
+3. Images are auto-optimized and stored in `freelancehub/posts/`
+4. Without Cloudinary configured, images save to `backend/uploads/` and are served from `/uploads`
+
+---
+
+*Designed and Developed by CloudHawk*
