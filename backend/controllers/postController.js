@@ -1,5 +1,5 @@
 const { Op, Sequelize } = require('sequelize');
-const { Post, User, Like, Comment } = require('../models');
+const { Post, User, Like, Comment, Bookmark, Proposal } = require('../models');
 const { normalize } = require('../utils/dbUtils');
 
 // Build a browser-loadable URL for an uploaded file.
@@ -38,16 +38,33 @@ const getFeed = async (req, res) => {
     ]);
 
     let likedPostIds = new Set();
-    if (req.user) {
-      const likes = await Like.findAll({
-        where: { userId: req.user.id, postId: posts.map(p => p.id) }
-      });
+    let bookmarkedPostIds = new Set();
+    let appliedPostIds = new Set();
+    if (req.user && posts.length > 0) {
+      const [likes, bookmarks, proposals] = await Promise.all([
+        Like.findAll({
+          where: { userId: req.user.id, postId: posts.map(p => p.id) }
+        }),
+        Bookmark.findAll({
+          where: { userId: req.user.id, postId: posts.map(p => p.id) }
+        }),
+        Proposal.findAll({
+          where: { userId: req.user.id, postId: posts.map(p => p.id) }
+        })
+      ]);
       likedPostIds = new Set(likes.map(l => l.postId));
+      bookmarkedPostIds = new Set(bookmarks.map(b => b.postId));
+      appliedPostIds = new Set(proposals.map(pr => pr.postId));
     }
 
     const postsWithLikes = posts.map((p) => {
       const normalized = normalize(p);
-      return { ...normalized, isLiked: likedPostIds.has(normalized._id) };
+      return {
+        ...normalized,
+        isLiked: likedPostIds.has(normalized._id),
+        isBookmarked: bookmarkedPostIds.has(normalized._id),
+        isApplied: appliedPostIds.has(normalized._id)
+      };
     });
 
     res.json({
@@ -138,12 +155,20 @@ const getPost = async (req, res) => {
     });
 
     let isLiked = false;
+    let isBookmarked = false;
+    let isApplied = false;
     if (req.user) {
-      const like = await Like.findOne({ where: { userId: req.user.id, postId: post.id } });
+      const [like, bookmark, proposal] = await Promise.all([
+        Like.findOne({ where: { userId: req.user.id, postId: post.id } }),
+        Bookmark.findOne({ where: { userId: req.user.id, postId: post.id } }),
+        Proposal.findOne({ where: { userId: req.user.id, postId: post.id } })
+      ]);
       isLiked = !!like;
+      isBookmarked = !!bookmark;
+      isApplied = !!proposal;
     }
 
-    res.json({ success: true, post: { ...normalize(post), isLiked }, comments: normalize(comments) });
+    res.json({ success: true, post: { ...normalize(post), isLiked, isBookmarked, isApplied }, comments: normalize(comments) });
   } catch (err) {
     console.error('Get post error:', err);
     res.status(500).json({ success: false, message: 'Failed to fetch post.' });

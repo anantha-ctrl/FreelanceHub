@@ -209,26 +209,24 @@ const relTime = (iso) => {
 };
 
 export function Notifications() {
+  const { user, updateUser } = useAuth();
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [readAt, setReadAt] = useState(() => parseInt(localStorage.getItem('fh_notif_read_at') || '0'));
+  const readAt = user?.notifReadAt || 0;
 
   useEffect(() => {
     userAPI.getNotifications()
       .then(r => setNotifications(r.data.notifications))
       .catch(() => {})
       .finally(() => setLoading(false));
-    // Keep in sync with the header bell's read state.
-    const onRead = () => setReadAt(parseInt(localStorage.getItem('fh_notif_read_at') || '0'));
-    window.addEventListener('fh-notif-read', onRead);
-    return () => window.removeEventListener('fh-notif-read', onRead);
   }, []);
 
-  const markAllRead = () => {
+  const markAllRead = async () => {
     const now = Date.now();
-    localStorage.setItem('fh_notif_read_at', String(now));
-    setReadAt(now);
-    window.dispatchEvent(new Event('fh-notif-read'));
+    try {
+      await authAPI.updateProfile({ notifReadAt: now });
+      updateUser({ notifReadAt: now });
+    } catch {}
   };
 
   return (

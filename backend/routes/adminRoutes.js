@@ -1,12 +1,14 @@
 // adminRoutes.js
 const express = require('express');
 const router = express.Router();
-const { getDashboard, getAllPosts, approvePost, rejectPost, adminDeletePost, getAllUsers, blockUser, unblockUser, deleteComment } = require('../controllers/adminController');
+const { getDashboard, getAllPosts, approvePost, rejectPost, adminDeletePost, getAllUsers, blockUser, unblockUser, deleteComment, getSystemStatus, getAuditLogs } = require('../controllers/adminController');
 const { protect, adminOnly } = require('../middleware/authMiddleware');
 
 router.use(protect, adminOnly);
 
 router.get('/dashboard', getDashboard);
+router.get('/system-status', getSystemStatus);
+router.get('/audit-logs', getAuditLogs);
 router.get('/posts', getAllPosts);
 router.put('/posts/:id/approve', approvePost);
 router.put('/posts/:id/reject', rejectPost);

@@ -49,12 +49,14 @@ export function Login() {
       </div>
       <form onSubmit={handleSubmit} className="space-y-4">
         <Input label="Email Address" type="email" placeholder="your@email.com" required autoComplete="email"
-          value={form.email} onChange={e => setForm(f => ({...f, email: e.target.value}))}/>
+          value={form.email} onChange={e => setForm(f => ({...f, email: e.target.value}))}
+          autoCapitalize="none" autoCorrect="off" spellCheck="false"/>
         <div>
           <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>Password</label>
           <div className="relative">
             <input type={showPass ? 'text' : 'password'} placeholder="Your password" required className="input-field pr-10"
-              value={form.password} onChange={e => setForm(f => ({...f, password: e.target.value}))}/>
+              value={form.password} onChange={e => setForm(f => ({...f, password: e.target.value}))}
+              autoCapitalize="none" autoCorrect="off" spellCheck="false"/>
             <button type="button" onClick={() => setShowPass(!showPass)}
               className="absolute right-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--text-muted)' }}>
               {showPass ? <FiEyeOff size={15}/> : <FiEye size={15}/>}
@@ -84,6 +86,8 @@ export function Login() {
 
 export function Register() {
   const [form, setForm] = useState({ name: '', email: '', mobile: '', password: '', confirm: '' });
+  const [showPass, setShowPass] = useState(false);
+  const [showConfirmPass, setShowConfirmPass] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const { register } = useAuth();
@@ -109,10 +113,33 @@ export function Register() {
       </div>
       <form onSubmit={handleSubmit} className="space-y-3.5">
         <Input label="Full Name" placeholder="Alex Morgan" required value={form.name} onChange={set('name')}/>
-        <Input label="Email Address" type="email" placeholder="alex@example.com" required value={form.email} onChange={set('email')}/>
+        <Input label="Email Address" type="email" placeholder="alex@example.com" required value={form.email} onChange={set('email')}
+          autoCapitalize="none" autoCorrect="off" spellCheck="false"/>
         <Input label="Mobile Number" type="tel" placeholder="+91 9876 543 210" required value={form.mobile} onChange={set('mobile')}/>
-        <Input label="Password" type="password" placeholder="Min. 8 characters" required value={form.password} onChange={set('password')}/>
-        <Input label="Confirm Password" type="password" placeholder="Repeat password" required value={form.confirm} onChange={set('confirm')}/>
+        <div>
+          <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>Password</label>
+          <div className="relative">
+            <input type={showPass ? 'text' : 'password'} placeholder="Min. 8 characters" required className="input-field pr-10"
+              value={form.password} onChange={set('password')}
+              autoCapitalize="none" autoCorrect="off" spellCheck="false"/>
+            <button type="button" onClick={() => setShowPass(!showPass)}
+              className="absolute right-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--text-muted)' }}>
+              {showPass ? <FiEyeOff size={15}/> : <FiEye size={15}/>}
+            </button>
+          </div>
+        </div>
+        <div>
+          <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>Confirm Password</label>
+          <div className="relative">
+            <input type={showConfirmPass ? 'text' : 'password'} placeholder="Repeat password" required className="input-field pr-10"
+              value={form.confirm} onChange={set('confirm')}
+              autoCapitalize="none" autoCorrect="off" spellCheck="false"/>
+            <button type="button" onClick={() => setShowConfirmPass(!showConfirmPass)}
+              className="absolute right-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--text-muted)' }}>
+              {showConfirmPass ? <FiEyeOff size={15}/> : <FiEye size={15}/>}
+            </button>
+          </div>
+        </div>
         {error && <p className="text-xs" style={{ color: 'var(--red)' }}>{error}</p>}
         <Button type="submit" loading={loading} className="w-full justify-center py-2.5 text-base mt-1">
           Create Account
@@ -120,6 +147,9 @@ export function Register() {
       </form>
       <p className="text-sm text-center mt-5" style={{ color: 'var(--text-muted)' }}>
         Already have an account? <Link to="/login" style={{ color: 'var(--neon-light)' }}>Sign In</Link>
+      </p>
+      <p className="text-xs text-center mt-2" style={{ color: 'var(--text-muted)' }}>
+        <Link to="/" style={{ color: 'var(--text-muted)' }}>← Back to home</Link>
       </p>
     </AuthCard>
   );

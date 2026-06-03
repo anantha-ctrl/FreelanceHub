@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { FiHeart, FiMessageCircle, FiShare2, FiMoreHorizontal, FiEdit2, FiTrash2, FiCheck, FiX } from 'react-icons/fi';
-import { Avatar, Badge } from '../common/UI';
-import { postAPI } from '../../utils/api';
+import { FiHeart, FiMessageCircle, FiShare2, FiMoreHorizontal, FiEdit2, FiTrash2, FiCheck, FiX, FiBookmark, FiSend } from 'react-icons/fi';
+import { Avatar, Badge, Modal, Button, Input, Textarea } from '../common/UI';
+import { postAPI, bookmarkAPI, proposalAPI } from '../../utils/api';
+import { useAuth } from '../../context/AuthContext';
 import toast from 'react-hot-toast';
 
 const categoryEmoji = {
@@ -11,10 +13,21 @@ const categoryEmoji = {
   'Writing': '✍️', 'Data Science': '📊', 'Other': '🔧'
 };
 
-export default function PostCard({ post, onLike, onDelete, showActions = false, showStatus = false, index = 0 }) {
+export default function PostCard({ post, onLike, onDelete, onBookmarkToggle, showActions = false, showStatus = false, index = 0 }) {
+  const navigate = useNavigate();
+  const { user } = useAuth();
+
   const [liked, setLiked] = useState(post.isLiked);
   const [likesCount, setLikesCount] = useState(post.likesCount || 0);
   const [liking, setLiking] = useState(false);
+
+  const [bookmarked, setBookmarked] = useState(post.isBookmarked);
+  const [applied, setApplied] = useState(post.isApplied);
+
+  const [applyModalOpen, setApplyModalOpen] = useState(false);
+  const [coverLetter, setCoverLetter] = useState('');
+  const [bidAmount, setBidAmount] = useState('');
+  const [submittingProposal, setSubmittingProposal] = useState(false);
 
   const [showComments, setShowComments] = useState(false);
   const [comments, setComments] = useState([]);
@@ -81,6 +94,37 @@ export default function PostCard({ post, onLike, onDelete, showActions = false, 
     }
   };
 
+  const handleBookmark = async () => {
+    try {
+      const res = await bookmarkAPI.toggleBookmark(post._id);
+      setBookmarked(res.data.bookmarked);
+      toast.success(res.data.message);
+      if (onBookmarkToggle) onBookmarkToggle(post._id, res.data.bookmarked);
+    } catch (err) {
+      toast.error('Failed to toggle bookmark.');
+    }
+  };
+
+  const handleApplySubmit = async (e) => {
+    e.preventDefault();
+    if (!coverLetter.trim() || !bidAmount.trim() || submittingProposal) return;
+    setSubmittingProposal(true);
+    try {
+      const res = await proposalAPI.applyForJob(post._id, {
+        coverLetter: coverLetter.trim(),
+        bidAmount: bidAmount.trim()
+      });
+      toast.success('Proposal submitted successfully!');
+      setApplied(true);
+      setApplyModalOpen(false);
+      setCoverLetter('');
+      setBidAmount('');
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to submit proposal.');
+    }
+    setSubmittingProposal(false);
+  };
+
   const author = post.userId;
   const emoji = categoryEmoji[post.category] || '📋';
 
@@ -129,9 +173,25 @@ export default function PostCard({ post, onLike, onDelete, showActions = false, 
           {post.skills?.length > 3 && <span className="skill-tag">+{post.skills.length - 3}</span>}
         </div>
 
-        {/* Budget */}
-        <div className="text-xs font-semibold mb-3" style={{ color: 'var(--green)' }}>
-          💰 {post.budget}
+        {/* Budget & Apply */}
+        <div className="flex items-center justify-between mb-3">
+          <div className="text-xs font-semibold" style={{ color: 'var(--green)' }}>
+            💰 {post.budget}
+          </div>
+          {post.approvalStatus === 'approved' && user && user.role !== 'admin' && author?.id !== user?.id && (
+            <button
+              onClick={() => setApplyModalOpen(true)}
+              disabled={applied}
+              className="text-xs font-semibold px-3 py-1.5 rounded-lg transition-all"
+              style={
+                applied
+                  ? { background: 'var(--bg-surface-2)', color: 'var(--text-muted)', cursor: 'not-allowed' }
+                  : { background: 'var(--neon)', color: '#fff' }
+              }
+            >
+              {applied ? '✓ Applied' : 'Apply Now'}
+            </button>
+          )}
         </div>
 
         {/* Footer */}
@@ -163,6 +223,24 @@ export default function PostCard({ post, onLike, onDelete, showActions = false, 
               style={{ color: showComments ? 'var(--neon)' : 'var(--text-muted)' }}>
               <FiMessageCircle size={14}/>{commentsCount}
             </button>
+            {/* Bookmark */}
+            {post.approvalStatus === 'approved' && user && user.role !== 'admin' && (
+              <button onClick={handleBookmark}
+                className="flex items-center gap-1 text-xs transition-colors"
+                style={{ color: bookmarked ? 'var(--neon)' : 'var(--text-muted)' }}
+                title={bookmarked ? "Remove Bookmark" : "Save Bookmark"}>
+                <FiBookmark size={14} fill={bookmarked ? 'currentColor' : 'none'}/>
+              </button>
+            )}
+            {/* Message */}
+            {user && user.role !== 'admin' && author?.id !== user?.id && (
+              <button onClick={() => navigate(`/chat?userId=${author?.id || author?._id}`)}
+                className="flex items-center gap-1 text-xs transition-colors"
+                style={{ color: 'var(--text-muted)' }}
+                title="Message Author">
+                <FiSend size={13}/>
+              </button>
+            )}
             {/* Owner actions */}
             {showActions && (
               <div className="flex items-center gap-1">
@@ -220,6 +298,34 @@ export default function PostCard({ post, onLike, onDelete, showActions = false, 
           </div>
         )}
       </div>
+
+      {/* Apply Proposal Modal */}
+      <Modal isOpen={applyModalOpen} onClose={() => setApplyModalOpen(false)} title={`Apply for: ${post.title}`}>
+        <form onSubmit={handleApplySubmit} className="space-y-4">
+          <div className="text-xs" style={{ color: 'var(--text-secondary)' }}>
+            Submit your application to <strong>{author?.name || 'Client'}</strong>.
+          </div>
+          <Input
+            label="Bid Amount"
+            placeholder="e.g. $500, $50/hr"
+            value={bidAmount}
+            onChange={e => setBidAmount(e.target.value)}
+            required
+          />
+          <Textarea
+            label="Cover Letter"
+            rows={4}
+            placeholder="Introduce yourself and explain why you're a great fit for this project..."
+            value={coverLetter}
+            onChange={e => setCoverLetter(e.target.value)}
+            required
+          />
+          <div className="flex justify-end gap-2 mt-2">
+            <Button type="button" variant="ghost" onClick={() => setApplyModalOpen(false)}>Cancel</Button>
+            <Button type="submit" loading={submittingProposal} className="btn-neon">Submit Proposal</Button>
+          </div>
+        </form>
+      </Modal>
     </motion.div>
   );
 }

@@ -14,6 +14,10 @@ const postRoutes = require('./routes/postRoutes');
 const userRoutes = require('./routes/userRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const logRoutes = require('./routes/logRoutes');
+const supportRoutes = require('./routes/supportRoutes');
+const bookmarkRoutes = require('./routes/bookmarkRoutes');
+const proposalRoutes = require('./routes/proposalRoutes');
+const messageRoutes = require('./routes/messageRoutes');
 const { seedAdmin } = require('./config/seed');
 const { connectDatabase, sequelize } = require('./config/database');
 
@@ -22,13 +26,15 @@ const app = express();
 app.use(helmet());
 app.use(xssClean());
 app.use(cors({
-  origin: process.env.CLIENT_URL || 'http://localhost:3000',
+  origin: (origin, callback) => {
+    callback(null, true);
+  },
   credentials: true
 }));
 
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 100,
+  max: process.env.NODE_ENV === 'production' ? 500 : 5000,
   message: { success: false, message: 'Too many requests, please try again later.' }
 });
 const authLimiter = rateLimit({
@@ -58,6 +64,10 @@ app.use('/api/posts', postRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/logs', logRoutes);
+app.use('/api/support', supportRoutes);
+app.use('/api/bookmarks', bookmarkRoutes);
+app.use('/api/proposals', proposalRoutes);
+app.use('/api/messages', messageRoutes);
 
 app.get('/api/health', (req, res) => {
   res.json({ success: true, message: 'FreelanceHub API is running', timestamp: new Date() });
@@ -81,7 +91,7 @@ connectDatabase()
     await sequelize.sync();
     await seedAdmin();
     const PORT = process.env.PORT || 5001;
-    app.listen(PORT, () => console.log(`🚀 Server running on http://localhost:${PORT}`));
+    app.listen(PORT, () => console.log(`🚀 FreelanceHub API Server running on port ${PORT}`));
   })
   .catch(err => {
     console.error('❌ Database connection failed:', err.message);

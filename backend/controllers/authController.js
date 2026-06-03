@@ -26,7 +26,15 @@ const getClientInfo = (req) => {
 
 const register = async (req, res) => {
   try {
-    const { name, email, mobile, password } = req.body;
+    const name = req.body.name?.trim();
+    const email = req.body.email?.trim()?.toLowerCase();
+    const mobile = req.body.mobile?.trim();
+    const { password } = req.body;
+
+    if (!email || !password) {
+      return res.status(400).json({ success: false, message: 'Email and password are required.' });
+    }
+
     const existing = await User.findOne({ where: { email } });
     if (existing) {
       return res.status(400).json({ success: false, message: 'Email already registered.' });
@@ -51,7 +59,8 @@ const register = async (req, res) => {
 
 const login = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const email = req.body.email?.trim()?.toLowerCase();
+    const { password } = req.body;
     const { ip, ua } = getClientInfo(req);
 
     if (!email || !password) {
@@ -94,6 +103,13 @@ const login = async (req, res) => {
 
     const safeUser = normalize(user);
 
+    res.cookie('token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: isAdmin ? 365 * 24 * 60 * 60 * 1000 : 5 * 60 * 60 * 1000
+    });
+
     res.json({
       success: true,
       message: 'Login successful.',
@@ -117,6 +133,7 @@ const logout = async (req, res) => {
 
     await User.update({ isOnline: false, lastSeen: new Date() }, { where: { id: req.user.id } });
 
+    res.clearCookie('token');
     res.json({ success: true, message: 'Logged out successfully.' });
   } catch (err) {
     console.error('Logout error:', err);
@@ -135,7 +152,7 @@ const getMe = async (req, res) => {
 
 const updateProfile = async (req, res) => {
   try {
-    const { name, mobile, bio, skills } = req.body;
+    const { name, mobile, bio, skills, theme, notifReadAt } = req.body;
     const updates = {};
     if (name) updates.name = name;
     if (mobile) updates.mobile = mobile;
@@ -143,6 +160,9 @@ const updateProfile = async (req, res) => {
     if (skills) {
       updates.skills = Array.isArray(skills) ? skills : skills.split(',').map(s => s.trim());
     }
+    if (theme) updates.theme = theme;
+    if (notifReadAt !== undefined) updates.notifReadAt = notifReadAt;
+    
     if (req.file) {
       updates.profileImage = fileUrl(req, req.file);
       updates.profileImagePublicId = req.file.filename;

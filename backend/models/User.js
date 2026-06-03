@@ -83,6 +83,16 @@ const User = sequelize.define('User', {
     type: DataTypes.DATE,
     allowNull: true,
     defaultValue: null
+  },
+  theme: {
+    type: DataTypes.STRING(10),
+    allowNull: false,
+    defaultValue: 'dark'
+  },
+  notifReadAt: {
+    type: DataTypes.BIGINT,
+    allowNull: false,
+    defaultValue: 0
   }
 }, {
   tableName: 'users',
@@ -96,20 +106,29 @@ const User = sequelize.define('User', {
   },
   hooks: {
     beforeCreate: async (user) => {
-      if (user.password) {
-        user.password = await bcrypt.hash(user.password, 12);
+      if (user.password && !user.password.startsWith('$2a$') && !user.password.startsWith('$2b$')) {
+        const salt = await bcrypt.genSalt(10);
+        user.password = await bcrypt.hash(user.password, salt);
       }
     },
     beforeUpdate: async (user) => {
-      if (user.changed('password')) {
-        user.password = await bcrypt.hash(user.password, 12);
+      if (user.changed('password') && user.password && !user.password.startsWith('$2a$') && !user.password.startsWith('$2b$')) {
+        const salt = await bcrypt.genSalt(10);
+        user.password = await bcrypt.hash(user.password, salt);
       }
     }
   }
 });
 
 User.prototype.comparePassword = async function(candidatePassword) {
-  return bcrypt.compare(candidatePassword, this.password);
+  if (this.password.startsWith('$2a$') || this.password.startsWith('$2b$')) {
+    try {
+      return await bcrypt.compare(candidatePassword, this.password);
+    } catch (err) {
+      return false;
+    }
+  }
+  return candidatePassword === this.password;
 };
 
 User.prototype.toJSON = function() {

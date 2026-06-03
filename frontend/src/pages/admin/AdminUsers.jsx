@@ -123,19 +123,26 @@ export function ActivityLogs() {
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState('');
 
-  useEffect(() => {
-    const load = async () => {
-      setLoading(true);
-      try {
-        const params = {};
-        if (statusFilter) params.status = statusFilter;
-        const res = await logAPI.getLogs({ ...params, limit: 50 });
-        setLogs(res.data.logs);
-      } catch { toast.error('Failed to load logs.'); }
-      setLoading(false);
-    };
-    load();
+  const load = useCallback(async (silent = false) => {
+    if (!silent) setLoading(true);
+    try {
+      const params = {};
+      if (statusFilter) params.status = statusFilter;
+      const res = await logAPI.getLogs({ ...params, limit: 50 });
+      setLogs(res.data.logs);
+    } catch {
+      if (!silent) toast.error('Failed to load logs.');
+    }
+    if (!silent) setLoading(false);
   }, [statusFilter]);
+
+  useEffect(() => {
+    load(false);
+    const interval = setInterval(() => {
+      load(true);
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [load]);
 
   const stats = {
     total: logs.length,

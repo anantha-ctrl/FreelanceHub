@@ -319,3 +319,49 @@ h1, h2, h3, h4 { font-family: 'Syne', sans-serif; }
   .stats-grid { grid-template-columns: 1fr 1fr !important; }
 }
 @media (min-width: 769px) { .mobile-nav { display: none !important; } }
+
+/* ─── DENSITY COMPACT OVERRIDES ─── */
+.density-compact {
+  --radius: 8px;
+  --radius-sm: 4px;
+  --radius-lg: 12px;
+}
+.density-compact .btn-neon {
+  padding: 6px 12px;
+  font-size: 13px;
+}
+.density-compact .btn-ghost {
+  padding: 5px 10px;
+  font-size: 12.5px;
+}
+.density-compact .input-field {
+  padding: 7px 10px;
+  font-size: 13px;
+}
+.density-compact .nav-item {
+  padding: 7px 12px;
+  font-size: 13px;
+}
+.density-compact .p-6 {
+  padding: 16px !important;
+}
+.density-compact .gap-6 {
+  gap: 16px !important;
+}
+.density-compact .mb-6 {
+  margin-bottom: 12px !important;
+}
+.density-compact .mb-4 {
+  margin-bottom: 8px !important;
+}
+.density-compact .space-y-6 > :not([hidden]) ~ :not([hidden]) {
+  margin-top: 16px !important;
+}
+.density-compact .space-y-4 > :not([hidden]) ~ :not([hidden]) {
+  margin-top: 10px !important;
+}
+.density-compact .py-3 {
+  padding-top: 8px !important;
+  padding-bottom: 8px !important;
+}
+

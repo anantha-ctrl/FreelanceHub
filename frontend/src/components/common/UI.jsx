@@ -1,6 +1,21 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import NotificationBell from '../user/NotificationBell';
+import { useTheme } from '../../context/ThemeContext';
+import { FiSun, FiMoon } from 'react-icons/fi';
+
+// ─── THEME TOGGLE ───
+export const ThemeToggle = () => {
+  const { isDark, toggleTheme } = useTheme();
+  return (
+    <button onClick={toggleTheme}
+      className="w-9 h-9 flex items-center justify-center rounded-lg transition-colors"
+      style={{ color: 'var(--text-secondary)', background: 'var(--bg-surface)' }}
+      title={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}>
+      {isDark ? <FiSun size={16} /> : <FiMoon size={16} />}
+    </button>
+  );
+};
 
 // ─── PAGE HEADER ───
 export const PageHeader = ({ title, subtitle, children }) => (
@@ -12,6 +27,7 @@ export const PageHeader = ({ title, subtitle, children }) => (
     </div>
     <div className="flex items-center gap-2">
       {children}
+      <ThemeToggle />
       <NotificationBell />
     </div>
   </div>

@@ -25,7 +25,7 @@ CREATE TABLE `users` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 INSERT INTO `users` (`id`, `name`, `email`, `mobile`, `password`, `role`, `profileImage`, `profileImagePublicId`, `bio`, `skills`, `isBlocked`, `isOnline`, `lastSeen`, `createdAt`, `updatedAt`) VALUES
-  ('6e0c997e-3d24-4c42-8d59-8e92a843fead', 'Admin', 'admin@freelancehub.com', '+1 000 000 0000', '$2a$12$g1P2Edh.aL7kCvUf/KqSr.AXPwCe5Qe2FCW7b1bXezgFpC7SkHIPC', 'admin', NULL, NULL, '', '', 0, 0, NULL, '2026-06-02 07:41:12', '2026-06-02 07:41:12');
+  ('6e0c997e-3d24-4c42-8d59-8e92a843fead', 'Admin', 'admin@freelancehub.com', '+1 000 000 0000', 'Admin@123456', 'admin', NULL, NULL, '', '', 0, 0, NULL, '2026-06-02 07:41:12', '2026-06-02 07:41:12');
 
 DROP TABLE IF EXISTS `posts`;
 CREATE TABLE `posts` (
@@ -118,6 +118,34 @@ CREATE TABLE `blocked_users` (
   KEY `blockedBy` (`blockedBy`),
   CONSTRAINT `blocked_users_ibfk_1` FOREIGN KEY (`userId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `blocked_users_ibfk_2` FOREIGN KEY (`blockedBy`) REFERENCES `users` (`id`) ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+DROP TABLE IF EXISTS `support_tickets`;
+CREATE TABLE `support_tickets` (
+  `id` char(36) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
+  `userId` char(36) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
+  `subject` varchar(150) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `status` enum('open','resolved','closed') COLLATE utf8mb4_unicode_ci DEFAULT 'open',
+  `createdAt` datetime NOT NULL,
+  `updatedAt` datetime NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `support_tickets_user_id` (`userId`),
+  CONSTRAINT `support_tickets_ibfk_1` FOREIGN KEY (`userId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+DROP TABLE IF EXISTS `support_messages`;
+CREATE TABLE `support_messages` (
+  `id` char(36) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
+  `ticketId` char(36) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
+  `senderId` char(36) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
+  `message` text COLLATE utf8mb4_unicode_ci NOT NULL,
+  `createdAt` datetime NOT NULL,
+  `updatedAt` datetime NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `support_messages_ticket_id` (`ticketId`),
+  KEY `support_messages_sender_id` (`senderId`),
+  CONSTRAINT `support_messages_ibfk_1` FOREIGN KEY (`ticketId`) REFERENCES `support_tickets` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `support_messages_ibfk_2` FOREIGN KEY (`senderId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 SET FOREIGN_KEY_CHECKS = 1;

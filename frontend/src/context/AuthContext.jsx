@@ -39,15 +39,6 @@ const authReducer = (state, action) => {
 export const AuthProvider = ({ children }) => {
   const [state, dispatch] = useReducer(authReducer, initialState);
 
-  // Set API defaults
-  useEffect(() => {
-    if (state.token) {
-      API.defaults.headers.common['Authorization'] = `Bearer ${state.token}`;
-    } else {
-      delete API.defaults.headers.common['Authorization'];
-    }
-  }, [state.token]);
-
   // Intercept 401 (token expired / session invalid)
   useEffect(() => {
     const interceptor = API.interceptors.response.use(
@@ -68,71 +59,31 @@ export const AuthProvider = ({ children }) => {
     return () => API.interceptors.response.eject(interceptor);
   }, [state.isAuthenticated]);
 
-  // Restore session from localStorage
+  // Restore session from HTTP Cookie on mount
   useEffect(() => {
     const restoreSession = async () => {
-      const token = localStorage.getItem('fh_token');
-      const userData = localStorage.getItem('fh_user');
-      const expiry = localStorage.getItem('fh_expiry');
-
-      if (token && userData) {
-        // Admins have no stored expiry; only enforce timeout when one exists.
-        if (expiry && Date.now() > parseInt(expiry)) {
-          clearSession();
-          dispatch({ type: 'LOADING_DONE' });
-          return;
-        }
-        try {
-          API.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-          const res = await API.get('/auth/me');
-          dispatch({
-            type: 'LOGIN_SUCCESS',
-            payload: { user: res.data.user, token, sessionExpiry: expiry ? parseInt(expiry) : null }
-          });
-        } catch {
-          clearSession();
-          dispatch({ type: 'LOADING_DONE' });
-        }
-      } else {
+      try {
+        const res = await API.get('/auth/me');
+        dispatch({
+          type: 'LOGIN_SUCCESS',
+          payload: { user: res.data.user, token: null, sessionExpiry: null }
+        });
+      } catch {
         dispatch({ type: 'LOADING_DONE' });
       }
     };
     restoreSession();
   }, []);
 
-  // 5-hour session timeout check
-  useEffect(() => {
-    if (!state.sessionExpiry) return;
-    const checkInterval = setInterval(() => {
-      if (Date.now() > state.sessionExpiry) {
-        toast.error('Session expired after 5 hours. Please login again.');
-        logout(true);
-      }
-    }, 60000); // Check every minute
-    return () => clearInterval(checkInterval);
-  }, [state.sessionExpiry]);
-
   const clearSession = () => {
-    localStorage.removeItem('fh_token');
-    localStorage.removeItem('fh_user');
-    localStorage.removeItem('fh_expiry');
-    delete API.defaults.headers.common['Authorization'];
+    // Session is cleared on backend via clearCookie
   };
 
   const login = async (email, password) => {
     try {
       const res = await API.post('/auth/login', { email, password });
       const { token, user, sessionExpiresIn } = res.data;
-      // Admins receive no expiry → never auto-logout.
       const sessionExpiry = sessionExpiresIn ? Date.now() + sessionExpiresIn : null;
-
-      localStorage.setItem('fh_token', token);
-      localStorage.setItem('fh_user', JSON.stringify(user));
-      if (sessionExpiry) {
-        localStorage.setItem('fh_expiry', sessionExpiry.toString());
-      } else {
-        localStorage.removeItem('fh_expiry');
-      }
 
       dispatch({ type: 'LOGIN_SUCCESS', payload: { user, token, sessionExpiry } });
       toast.success(`Welcome back, ${user.name}!`);

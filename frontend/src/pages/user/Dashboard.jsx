@@ -19,23 +19,29 @@ export default function Dashboard() {
   });
   const [loading, setLoading] = useState(true);
 
+  const load = async (silent = false) => {
+    if (!silent) setLoading(true);
+    try {
+      const [postsRes, sessRes, statsRes] = await Promise.all([
+        postAPI.getMyPosts({ limit: 5 }),
+        logAPI.getMySessions(),
+        postAPI.getMyStats()
+      ]);
+      setPosts(postsRes.data.posts);
+      setSessions(sessRes.data.logs);
+      setChartData(statsRes.data.chart);
+      const { chart, success, ...s } = statsRes.data;
+      setStats(s);
+    } catch {}
+    if (!silent) setLoading(false);
+  };
+
   useEffect(() => {
-    const load = async () => {
-      try {
-        const [postsRes, sessRes, statsRes] = await Promise.all([
-          postAPI.getMyPosts({ limit: 5 }),
-          logAPI.getMySessions(),
-          postAPI.getMyStats()
-        ]);
-        setPosts(postsRes.data.posts);
-        setSessions(sessRes.data.logs);
-        setChartData(statsRes.data.chart);
-        const { chart, success, ...s } = statsRes.data;
-        setStats(s);
-      } catch {}
-      setLoading(false);
-    };
-    load();
+    load(false);
+    const interval = setInterval(() => {
+      load(true);
+    }, 10000);
+    return () => clearInterval(interval);
   }, []);
 
   const { totalPosts, approved, pending, totalLikes, totalComments } = stats;

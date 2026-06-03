@@ -8,7 +8,7 @@ const seedAdmin = async () => {
       await User.create({
         name: 'Admin',
         email,
-        mobile: '+1 000 000 0000',
+        mobile: '+91 9876543234',
         password: process.env.ADMIN_PASSWORD || 'Admin@123456',
         role: 'admin'
       });

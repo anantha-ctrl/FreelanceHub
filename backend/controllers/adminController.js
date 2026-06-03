@@ -1,16 +1,17 @@
 const { Op, Sequelize } = require('sequelize');
-const { User, Post, LoginLog, BlockedUser, Comment } = require('../models');
+const { sequelize, User, Post, LoginLog, BlockedUser, Comment, Like, SupportTicket, AuditLog } = require('../models');
 const { normalize } = require('../utils/dbUtils');
+const { logAudit } = require('../utils/auditLogger');
 
 const getDashboard = async (req, res) => {
   try {
     const [
       totalUsers,
       totalPosts,
-      pendingPosts,
+      pendingPostsCount,
       blockedUsers,
       activeSessions,
-      recentPosts,
+      pendingApprovals,
       recentUsers
     ] = await Promise.all([
       User.count({ where: { role: 'user' } }),
@@ -18,7 +19,12 @@ const getDashboard = async (req, res) => {
       Post.count({ where: { approvalStatus: 'pending', isDeleted: false } }),
       User.count({ where: { isBlocked: true } }),
       LoginLog.count({ where: { sessionStatus: 'active' } }),
-      Post.findAll({ where: { isDeleted: false }, include: [{ model: User, as: 'user', attributes: ['id', 'name', 'profileImage'] }], order: [['createdAt', 'DESC']], limit: 5 }),
+      Post.findAll({
+        where: { approvalStatus: 'pending', isDeleted: false },
+        include: [{ model: User, as: 'user', attributes: ['id', 'name', 'profileImage'] }],
+        order: [['createdAt', 'DESC']],
+        limit: 10
+      }),
       User.findAll({ where: { role: 'user' }, order: [['createdAt', 'DESC']], limit: 5 })
     ]);
 
@@ -37,8 +43,8 @@ const getDashboard = async (req, res) => {
 
     res.json({
       success: true,
-      stats: { totalUsers, totalPosts, pendingPosts, blockedUsers, activeSessions },
-      recentPosts: normalize(recentPosts),
+      stats: { totalUsers, totalPosts, pendingPosts: pendingPostsCount, blockedUsers, activeSessions },
+      pendingApprovals: normalize(pendingApprovals),
       recentUsers: normalize(recentUsers),
       dailyStats
     });
@@ -85,7 +91,17 @@ const approvePost = async (req, res) => {
     const post = await Post.findByPk(req.params.id);
     if (!post) return res.status(404).json({ success: false, message: 'Post not found.' });
 
+    const start = Date.now();
     await post.update({ approvalStatus: 'approved', approvedBy: req.user.id, approvedAt: new Date(), rejectionReason: null });
+    const executionTimeMs = Date.now() - start;
+
+    await logAudit({
+      action: 'POST_APPROVE',
+      details: `Approved post: "${post.title}" (ID: ${post.id})`,
+      req,
+      executionTimeMs
+    });
+
     await post.reload({ include: [{ model: User, as: 'user', attributes: ['id', 'name', 'email'] }] });
     res.json({ success: true, message: 'Post approved and published.', post: normalize(post) });
   } catch (err) {
@@ -100,7 +116,17 @@ const rejectPost = async (req, res) => {
     const post = await Post.findByPk(req.params.id);
     if (!post) return res.status(404).json({ success: false, message: 'Post not found.' });
 
+    const start = Date.now();
     await post.update({ approvalStatus: 'rejected', rejectionReason: reason || 'Does not meet platform standards', approvedBy: req.user.id, approvedAt: new Date() });
+    const executionTimeMs = Date.now() - start;
+
+    await logAudit({
+      action: 'POST_REJECT',
+      details: `Rejected post: "${post.title}" (ID: ${post.id}). Reason: ${reason || 'Does not meet platform standards'}`,
+      req,
+      executionTimeMs
+    });
+
     await post.reload({ include: [{ model: User, as: 'user', attributes: ['id', 'name', 'email'] }] });
     res.json({ success: true, message: 'Post rejected.', post: normalize(post) });
   } catch (err) {
@@ -159,6 +185,7 @@ const blockUser = async (req, res) => {
     const user = await User.findByPk(req.params.id);
     if (!user) return res.status(404).json({ success: false, message: 'User not found.' });
 
+    const start = Date.now();
     await user.update({ isBlocked: true });
 
     await BlockedUser.upsert({
@@ -169,6 +196,14 @@ const blockUser = async (req, res) => {
     });
 
     await LoginLog.update({ logoutTime: new Date(), sessionStatus: 'expired' }, { where: { userId: user.id, sessionStatus: 'active' } });
+    const executionTimeMs = Date.now() - start;
+
+    await logAudit({
+      action: 'USER_BLOCK',
+      details: `Blocked user: "${user.name}" (ID: ${user.id}). Reason: ${reason || 'Policy violation'}`,
+      req,
+      executionTimeMs
+    });
 
     res.json({ success: true, message: `User ${user.name} has been blocked.`, user: normalize(user) });
   } catch (err) {
@@ -182,8 +217,18 @@ const unblockUser = async (req, res) => {
     const user = await User.findByPk(req.params.id);
     if (!user) return res.status(404).json({ success: false, message: 'User not found.' });
 
+    const start = Date.now();
     await user.update({ isBlocked: false });
     await BlockedUser.destroy({ where: { userId: user.id } });
+    const executionTimeMs = Date.now() - start;
+
+    await logAudit({
+      action: 'USER_UNBLOCK',
+      details: `Unblocked user: "${user.name}" (ID: ${user.id})`,
+      req,
+      executionTimeMs
+    });
+
     res.json({ success: true, message: `User ${user.name} has been unblocked.`, user: normalize(user) });
   } catch (err) {
     console.error('Unblock user error:', err);
@@ -205,4 +250,75 @@ const deleteComment = async (req, res) => {
   }
 };
 
-module.exports = { getDashboard, getAllPosts, approvePost, rejectPost, adminDeletePost, getAllUsers, blockUser, unblockUser, deleteComment };
+const getSystemStatus = async (req, res) => {
+  try {
+    const dbConfig = {
+      host: process.env.DB_HOST || 'localhost',
+      database: process.env.DB_NAME || 'freehub',
+      port: process.env.DB_PORT || '3306',
+      dialect: 'mysql',
+      nodeEnv: process.env.NODE_ENV || 'development'
+    };
+
+    const [
+      usersCount,
+      postsCount,
+      loginsCount,
+      likesCount,
+      commentsCount,
+      ticketsCount,
+      blockedCount
+    ] = await Promise.all([
+      User.count(),
+      Post.count({ where: { isDeleted: false } }),
+      LoginLog.count(),
+      Like.count(),
+      Comment.count({ where: { isDeleted: false } }),
+      SupportTicket.count(),
+      User.count({ where: { isBlocked: true } })
+    ]);
+
+    let dbStatus = 'Disconnected';
+    try {
+      await sequelize.authenticate();
+      dbStatus = 'Connected';
+    } catch (err) {
+      dbStatus = `Error: ${err.message}`;
+    }
+
+    res.json({
+      success: true,
+      dbStatus,
+      config: dbConfig,
+      stats: {
+        users: usersCount,
+        posts: postsCount,
+        logins: loginsCount,
+        likes: likesCount,
+        comments: commentsCount,
+        tickets: ticketsCount,
+        blockedUsers: blockedCount
+      }
+    });
+  } catch (err) {
+    console.error('Get system status error:', err);
+    res.status(500).json({ success: false, message: 'Failed to fetch system database status.' });
+  }
+};
+
+const getAuditLogs = async (req, res) => {
+  try {
+    const { limit = 50 } = req.query;
+    const logs = await AuditLog.findAll({
+      include: [{ model: User, as: 'user', attributes: ['id', 'name', 'email'] }],
+      order: [['createdAt', 'DESC']],
+      limit: parseInt(limit)
+    });
+    res.json({ success: true, logs: normalize(logs) });
+  } catch (err) {
+    console.error('Get audit logs error:', err);
+    res.status(500).json({ success: false, message: 'Failed to fetch audit logs.' });
+  }
+};
+
+module.exports = { getDashboard, getAllPosts, approvePost, rejectPost, adminDeletePost, getAllUsers, blockUser, unblockUser, deleteComment, getSystemStatus, getAuditLogs };

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FiBell } from 'react-icons/fi';
-import { userAPI } from '../../utils/api';
+import { userAPI, authAPI } from '../../utils/api';
 import { useAuth } from '../../context/AuthContext';
 
 const relTime = (iso) => {
@@ -17,12 +17,13 @@ const relTime = (iso) => {
 };
 
 export default function NotificationBell() {
-  const { user } = useAuth();
+  const { user, updateUser } = useAuth();
   const isAdmin = user?.role === 'admin';
   const [notifications, setNotifications] = useState([]);
-  const [readAt, setReadAt] = useState(() => parseInt(localStorage.getItem('fh_notif_read_at') || '0'));
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
+
+  const readAt = user?.notifReadAt || 0;
 
   const load = useCallback(async () => {
     try {
@@ -36,10 +37,7 @@ export default function NotificationBell() {
     load();
     // Poll for real-time updates while the app is open.
     const id = setInterval(load, 25000);
-    // Stay in sync with the Notifications page's "Mark all read".
-    const onRead = () => setReadAt(parseInt(localStorage.getItem('fh_notif_read_at') || '0'));
-    window.addEventListener('fh-notif-read', onRead);
-    return () => { clearInterval(id); window.removeEventListener('fh-notif-read', onRead); };
+    return () => clearInterval(id);
   }, [load, isAdmin]);
 
   // Notifications are a user-only feature; admins use their own panels.
@@ -47,11 +45,12 @@ export default function NotificationBell() {
 
   const unread = notifications.filter(n => new Date(n.time).getTime() > readAt).length;
 
-  const markAllRead = () => {
+  const markAllRead = async () => {
     const now = Date.now();
-    localStorage.setItem('fh_notif_read_at', String(now));
-    setReadAt(now);
-    window.dispatchEvent(new Event('fh-notif-read'));
+    try {
+      await authAPI.updateProfile({ notifReadAt: now });
+      updateUser({ notifReadAt: now });
+    } catch {}
   };
 
   return (

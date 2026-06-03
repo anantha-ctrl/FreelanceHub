@@ -6,19 +6,41 @@ import { adminAPI } from '../../utils/api';
 import { PageHeader, StatCard, Card, Badge, Avatar, Skeleton, Button } from '../../components/common/UI';
 import toast from 'react-hot-toast';
 
+const formatChartDate = (dateStr) => {
+  if (!dateStr) return '';
+  const parts = dateStr.split('-');
+  if (parts.length !== 3) return dateStr;
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const monthIdx = parseInt(parts[1], 10) - 1;
+  const day = parseInt(parts[2], 10);
+  if (monthIdx >= 0 && monthIdx < 12) {
+    return `${months[monthIdx]} ${day}`;
+  }
+  return dateStr;
+};
+
 export default function AdminDashboard() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  const load = async () => {
+  const load = async (silent = false) => {
+    if (!silent) setLoading(true);
     try {
       const res = await adminAPI.getDashboard();
       setData(res.data);
-    } catch { toast.error('Failed to load dashboard.'); }
-    setLoading(false);
+    } catch { 
+      if (!silent) toast.error('Failed to load dashboard.'); 
+    }
+    if (!silent) setLoading(false);
   };
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => { 
+    load(false); 
+    const interval = setInterval(() => {
+      load(true);
+    }, 10000);
+    return () => clearInterval(interval);
+  }, []);
 
   const handleApprove = async (id) => {
     try {
@@ -68,9 +90,9 @@ export default function AdminDashboard() {
                 </div>
                 <ResponsiveContainer width="100%" height={160}>
                   <BarChart data={data?.dailyStats || []}>
-                    <XAxis dataKey="_id" tick={{ fontSize: 11, fill: 'var(--text-muted)' }} axisLine={false} tickLine={false}/>
+                    <XAxis dataKey="_id" tickFormatter={formatChartDate} tick={{ fontSize: 11, fill: 'var(--text-muted)' }} axisLine={false} tickLine={false}/>
                     <YAxis hide/>
-                    <Tooltip contentStyle={{ background: 'var(--bg-surface-2)', border: '1px solid var(--border)', borderRadius: 8, fontSize: 12, color: 'var(--text-primary)' }}/>
+                    <Tooltip labelFormatter={formatChartDate} contentStyle={{ background: 'var(--bg-surface-2)', border: '1px solid var(--border)', borderRadius: 8, fontSize: 12, color: 'var(--text-primary)' }}/>
                     <Bar dataKey="logins" fill="var(--neon)" radius={[4,4,0,0]} opacity={0.85}/>
                   </BarChart>
                 </ResponsiveContainer>

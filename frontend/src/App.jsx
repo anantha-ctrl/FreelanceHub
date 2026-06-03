@@ -17,6 +17,11 @@ import CreatePost from './pages/user/CreatePost';
 import Profile from './pages/user/Profile';
 import Notifications from './pages/user/Notifications';
 import EditPost from './pages/user/EditPost';
+import SupportDesk from './pages/user/SupportDesk';
+import Settings from './pages/user/Settings';
+import Bookmarks from './pages/user/Bookmarks';
+import Proposals from './pages/user/Proposals';
+import Chat from './pages/user/Chat';
 
 // Pages - Admin
 import AdminLayout from './components/layout/AdminLayout';
@@ -24,6 +29,7 @@ import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminPosts from './pages/admin/AdminPosts';
 import AdminUsers from './pages/admin/AdminUsers';
 import ActivityLogs from './pages/admin/ActivityLogs';
+import SupportInbox from './pages/admin/SupportInbox';
 
 // Pages - Common
 import NotFound from './pages/NotFound';
@@ -35,7 +41,6 @@ const ProtectedRoute = ({ children, adminOnly = false }) => {
   if (loading) return <PageLoader />;
   if (!isAuthenticated) return <Navigate to="/login" replace />;
   if (adminOnly && user?.role !== 'admin') return <Navigate to="/dashboard" replace />;
-  if (!adminOnly && user?.role === 'admin') return <Navigate to="/admin" replace />;
   return children;
 };
 
@@ -59,8 +64,8 @@ const PageLoader = () => (
 
 function App() {
   return (
-    <ThemeProvider>
-      <AuthProvider>
+    <AuthProvider>
+      <ThemeProvider>
         <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
           <Toaster
             position="bottom-right"
@@ -92,6 +97,11 @@ function App() {
               <Route path="edit-post/:id" element={<EditPost />} />
               <Route path="profile" element={<Profile />} />
               <Route path="notifications" element={<Notifications />} />
+              <Route path="support" element={<SupportDesk />} />
+              <Route path="settings" element={<Settings />} />
+              <Route path="bookmarks" element={<Bookmarks />} />
+              <Route path="proposals" element={<Proposals />} />
+              <Route path="chat" element={<Chat />} />
             </Route>
 
             {/* Admin routes */}
@@ -101,14 +111,17 @@ function App() {
               <Route path="feed" element={<Feed />} />
               <Route path="users" element={<AdminUsers />} />
               <Route path="logs" element={<ActivityLogs />} />
+              <Route path="support" element={<SupportInbox />} />
+              <Route path="profile" element={<Profile />} />
+              <Route path="settings" element={<Settings />} />
             </Route>
 
             {/* 404 */}
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
-      </AuthProvider>
-    </ThemeProvider>
+      </ThemeProvider>
+    </AuthProvider>
   );
 }
 

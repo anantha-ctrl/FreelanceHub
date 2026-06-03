@@ -2,10 +2,9 @@ import React, { useEffect, useState } from 'react';
 import { Outlet, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuth } from '../../context/AuthContext';
-import { useTheme } from '../../context/ThemeContext';
 import { adminAPI } from '../../utils/api';
 import { useSessionTimer } from '../user/SessionBar';
-import { FiGrid, FiCheckSquare, FiUsers, FiActivity, FiLogOut, FiSun, FiMoon, FiShield, FiMenu, FiX, FiList, FiClock } from 'react-icons/fi';
+import { FiGrid, FiCheckSquare, FiUsers, FiActivity, FiLogOut, FiShield, FiMenu, FiX, FiList, FiClock, FiMessageSquare, FiSettings } from 'react-icons/fi';
 
 const getAdminNav = (pendingPosts) => [
   { to: '/admin',        icon: FiGrid,        label: 'Dashboard',    exact: true },
@@ -13,6 +12,7 @@ const getAdminNav = (pendingPosts) => [
   { to: '/admin/feed',   icon: FiList,        label: 'Feed'           },
   { to: '/admin/users',  icon: FiUsers,       label: 'Users'          },
   { to: '/admin/logs',   icon: FiActivity,    label: 'Activity Logs'  },
+  { to: '/admin/support',icon: FiMessageSquare, label: 'Support Inbox' },
 ];
 
 const AdminSessionTimer = () => {
@@ -37,7 +37,6 @@ const AdminSessionTimer = () => {
 
 const Sidebar = ({ open, onClose, pendingPosts }) => {
   const { user, logout } = useAuth();
-  const { isDark, toggleTheme } = useTheme();
   const navigate = useNavigate();
   const adminNav = getAdminNav(pendingPosts);
 
@@ -74,10 +73,10 @@ const Sidebar = ({ open, onClose, pendingPosts }) => {
           ))}
 
           <div className="px-4 mt-4 mb-2 text-xs font-semibold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>Settings</div>
-          <button onClick={toggleTheme} className="nav-item w-full text-left">
-            {isDark ? <FiSun size={16}/> : <FiMoon size={16}/>}
-            <span>{isDark ? 'Light Mode' : 'Dark Mode'}</span>
-          </button>
+          <NavLink to="/admin/settings" className="nav-item">
+            <FiSettings size={16}/><span>Settings</span>
+          </NavLink>
+
           <NavLink to="/dashboard" className="nav-item" style={{ color: 'var(--neon-light)' }}>
             <FiGrid size={16}/><span>User View</span>
           </NavLink>
@@ -88,14 +87,15 @@ const Sidebar = ({ open, onClose, pendingPosts }) => {
 
         <AdminSessionTimer/>
 
-        <div className="p-3" style={{ borderTop: '1px solid var(--border)' }}>
-          <div className="flex items-center gap-2.5 p-2 rounded-lg" style={{ background: 'var(--bg-surface)' }}>
+        <div className="p-3 cursor-pointer" style={{ borderTop: '1px solid var(--border)' }} onClick={() => navigate('/admin/profile')}>
+          <div className="flex items-center gap-2.5 p-2 rounded-lg hover:bg-bg-surface-2 transition-all" style={{ background: 'var(--bg-surface)' }}>
             <div className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold"
               style={{ background: 'linear-gradient(135deg, #8b5cf6, #3b82f6)' }}>AD</div>
             <div className="flex-1 min-w-0">
               <div className="text-sm font-medium truncate" style={{ color: 'var(--text-primary)' }}>{user?.name}</div>
               <div className="text-xs" style={{ color: 'var(--purple)' }}>Administrator</div>
             </div>
+            <FiSettings size={14} style={{ color: 'var(--text-muted)' }}/>
           </div>
         </div>
       </aside>
