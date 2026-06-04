@@ -6,16 +6,16 @@ A modern full-stack social platform for freelancers with an **Instagram-style po
 
 ## Tech Stack
 
-| Layer       | Technology                                   |
-|-------------|----------------------------------------------|
-| Frontend    | React 18 · Tailwind CSS · Framer Motion      |
-| Backend     | Node.js · Express.js                         |
-| Database    | **MySQL** (Sequelize ORM)                    |
-| Auth        | JWT · bcryptjs (5h for users, no expiry for admins) |
-| Images      | Cloudinary (or local disk fallback)          |
-| Charts      | Recharts                                     |
-| State       | React Context API                            |
-| Routing     | React Router v6                              |
+| Layer    | Technology                                          |
+| -------- | --------------------------------------------------- |
+| Frontend | React 18 · Tailwind CSS · Framer Motion             |
+| Backend  | Node.js · Express.js                                |
+| Database | **MySQL** (Sequelize ORM)                           |
+| Auth     | JWT · bcryptjs (5h for users, no expiry for admins) |
+| Images   | Cloudinary (or local disk fallback)                 |
+| Charts   | Recharts                                            |
+| State    | React Context API                                   |
+| Routing  | React Router v6                                     |
 
 > **Note:** This project runs on **MySQL** (via Sequelize), which is why it lives under `xampp/htdocs`. It uses XAMPP's MySQL on port `3306`. There is no MongoDB.
 
@@ -24,6 +24,7 @@ A modern full-stack social platform for freelancers with an **Instagram-style po
 ## Features
 
 ### User Panel
+
 - Register · Login · Secure 5-hour auto-expiring session
 - Create / Edit / Delete freelancer posts with image upload
 - Instagram-style infinite-scroll feed with search & category filter
@@ -40,6 +41,7 @@ A modern full-stack social platform for freelancers with an **Instagram-style po
 - **Local Network Testing**: Helper to rewrite loopback URLs for mobile browser testing over local Wi-Fi.
 
 ### Admin Panel
+
 - Dashboard with live stats and charts
 - Post approval workflow (Approve / Reject with reason)
 - User management (Block / Unblock with reason)
@@ -50,6 +52,7 @@ A modern full-stack social platform for freelancers with an **Instagram-style po
 - **Support Inbox**: Manage, review, and reply to user support desk tickets.
 
 ### Theme
+
 - **Dark mode** (default): Navy `#0a0f1e` · Charcoal · Neon Blue `#3b82f6` · Purple `#8b5cf6`
 - **Light mode**: Soft slate `#f0f4ff` · White cards · Vibrant accents
 - Toggle persisted to `localStorage` — click ☀/🌙 in the sidebar
@@ -59,23 +62,27 @@ A modern full-stack social platform for freelancers with an **Instagram-style po
 ## Platform Workflows
 
 ### 1. Job Posting & Content Moderation
+
 1. **Creation**: A freelancer designs and publishes a job post containing a title, description, budget range, skill requirements, and a cover image.
 2. **Pending Queue**: Upon creation, the post's status is set to `Pending` and is kept hidden from the public feed.
 3. **Admin Moderation**: An administrator reviews the post from the Admin Control Panel. They can either **Approve** it (making it public) or **Reject** it (supplying an edit reason).
 4. **Re-Submission**: If the freelancer modifies the details of an approved or rejected post, the post automatically reverts back to `Pending` status and is re-moderated.
 
 ### 2. Proposal Submission & Job Matching
+
 1. **Browsing**: Freelancers browse approved posts on the Feed using keyword searches or category filtering.
 2. **Detailed View**: The freelancer opens a post (`/post/:id`) to inspect all job parameters, active proposal counts, and client details.
 3. **Application**: The freelancer fills out a proposal form, specifying their bid rate and pitching their experience in a cover letter.
 4. **Review & Action**: The client receives a real-time notification, accesses their Proposals Tracker, and accepts or rejects the candidate.
 
 ### 3. Collaboration & Direct Messaging
+
 1. **Initiation**: A user opens a chat screen directly from a freelancer's proposal card or profile view.
 2. **Active Chat**: A conversation thread is initialized under the Chat module, allowing the user and freelancer to communicate in real-time.
 3. **Responsive Display**: On mobile screens, the chat workspace adapts into a single-pane display, using a custom Back (←) button to return to the active thread list.
 
 ### 4. Support Desk Ticketing
+
 1. **Ticket Submission**: Users experiencing technical issues submit a support request ticket outlining their issue.
 2. **Queue & Status**: The request joins the admin Support Inbox queue. Admin updates the ticket status (`Open`, `In Progress`, or `Resolved`).
 3. **Support Chat**: Admin and users exchange messages directly within the ticket detail screen to solve queries.
@@ -133,7 +140,6 @@ graph TD
 ```
 
 ---
-
 
 ## Project Structure
 
@@ -202,6 +208,7 @@ freelancehub/
 ## Installation & Setup
 
 ### Prerequisites
+
 - **Node.js** 16+
 - **MySQL** running (e.g. start **MySQL** from the XAMPP Control Panel — port `3306`)
 
@@ -266,104 +273,115 @@ npm start
 
 ### 4. Login
 
-| Role  | Email                     | Password      |
-|-------|---------------------------|---------------|
-| Admin | admin@freelancehub.com    | Admin@123456  |
-| User  | Register a new account    | Any 8+ chars  |
+| Role  | Email                  | Password     |
+| ----- | ---------------------- | ------------ |
+| Admin | admin@freelancehub.com | Admin@123456 |
+| User  | Register a new account | Any 8+ chars |
 
 ---
 
 ## API Endpoints
 
 ### Auth
-| Method | Route                         | Auth     | Description                  |
-|--------|-------------------------------|----------|------------------------------|
-| POST   | /api/auth/register            | Public   | Create account               |
-| POST   | /api/auth/login               | Public   | Login + create session       |
-| POST   | /api/auth/logout              | User     | End session                  |
-| GET    | /api/auth/me                  | User     | Get profile                  |
-| PUT    | /api/auth/update-profile      | User     | Update profile (+ avatar upload) |
-| PUT    | /api/auth/change-password     | User     | Change password              |
+
+| Method | Route                     | Auth   | Description                      |
+| ------ | ------------------------- | ------ | -------------------------------- |
+| POST   | /api/auth/register        | Public | Create account                   |
+| POST   | /api/auth/login           | Public | Login + create session           |
+| POST   | /api/auth/logout          | User   | End session                      |
+| GET    | /api/auth/me              | User   | Get profile                      |
+| PUT    | /api/auth/update-profile  | User   | Update profile (+ avatar upload) |
+| PUT    | /api/auth/change-password | User   | Change password                  |
 
 ### Posts
-| Method | Route                         | Auth     | Description                  |
-|--------|-------------------------------|----------|------------------------------|
-| GET    | /api/posts                    | Optional | Public feed (approved only)  |
-| POST   | /api/posts                    | User     | Create post (pending)        |
-| GET    | /api/posts/my-posts           | User     | Own posts                    |
-| GET    | /api/posts/my-stats           | User     | Dashboard stats + 7-day engagement |
-| GET    | /api/posts/:id                | Optional | Single post + comments       |
-| PUT    | /api/posts/:id                | User     | Edit post (re-pends approval)|
-| DELETE | /api/posts/:id                | User     | Delete own post              |
-| POST   | /api/posts/:id/like           | User     | Toggle like                  |
-| POST   | /api/posts/:id/comment        | User     | Add comment                  |
-| GET    | /api/posts/:id/comments       | Public   | Get comments                 |
+
+| Method | Route                   | Auth     | Description                        |
+| ------ | ----------------------- | -------- | ---------------------------------- |
+| GET    | /api/posts              | Optional | Public feed (approved only)        |
+| POST   | /api/posts              | User     | Create post (pending)              |
+| GET    | /api/posts/my-posts     | User     | Own posts                          |
+| GET    | /api/posts/my-stats     | User     | Dashboard stats + 7-day engagement |
+| GET    | /api/posts/:id          | Optional | Single post + comments             |
+| PUT    | /api/posts/:id          | User     | Edit post (re-pends approval)      |
+| DELETE | /api/posts/:id          | User     | Delete own post                    |
+| POST   | /api/posts/:id/like     | User     | Toggle like                        |
+| POST   | /api/posts/:id/comment  | User     | Add comment                        |
+| GET    | /api/posts/:id/comments | Public   | Get comments                       |
 
 ### Bookmarks
-| Method | Route                         | Auth     | Description                  |
-|--------|-------------------------------|----------|------------------------------|
-| POST   | /api/bookmarks/:postId        | User     | Toggle post bookmark status  |
-| GET    | /api/bookmarks                | User     | List all bookmarked posts    |
+
+| Method | Route                  | Auth | Description                 |
+| ------ | ---------------------- | ---- | --------------------------- |
+| POST   | /api/bookmarks/:postId | User | Toggle post bookmark status |
+| GET    | /api/bookmarks         | User | List all bookmarked posts   |
 
 ### Proposals
-| Method | Route                         | Auth     | Description                  |
-|--------|-------------------------------|----------|------------------------------|
-| POST   | /api/proposals/apply/:postId  | User     | Apply for a job post         |
-| GET    | /api/proposals/post/:postId   | User     | Get all proposals for a post |
-| GET    | /api/proposals/my             | User     | Get own submitted proposals  |
-| PUT    | /api/proposals/:id/status     | User     | Update proposal status       |
+
+| Method | Route                        | Auth | Description                  |
+| ------ | ---------------------------- | ---- | ---------------------------- |
+| POST   | /api/proposals/apply/:postId | User | Apply for a job post         |
+| GET    | /api/proposals/post/:postId  | User | Get all proposals for a post |
+| GET    | /api/proposals/my            | User | Get own submitted proposals  |
+| PUT    | /api/proposals/:id/status    | User | Update proposal status       |
 
 ### Messages & Chat
-| Method | Route                         | Auth     | Description                  |
-|--------|-------------------------------|----------|------------------------------|
-| POST   | /api/messages                 | User     | Send a chat message          |
-| GET    | /api/messages/conversations   | User     | Get user's conversation list |
-| GET    | /api/messages/history/:partnerId| User   | Get message history with user|
+
+| Method | Route                            | Auth | Description                   |
+| ------ | -------------------------------- | ---- | ----------------------------- |
+| POST   | /api/messages                    | User | Send a chat message           |
+| GET    | /api/messages/conversations      | User | Get user's conversation list  |
+| GET    | /api/messages/history/:partnerId | User | Get message history with user |
 
 ### Support Helpdesk
-| Method | Route                                  | Auth     | Description                        |
-|--------|----------------------------------------|----------|------------------------------------|
-| POST   | /api/support/tickets                   | User     | Create support ticket              |
-| GET    | /api/support/tickets                   | User     | Get own tickets                    |
-| GET    | /api/support/tickets/:id               | User     | Get support ticket details         |
-| POST   | /api/support/tickets/:id/messages      | User     | Add message to ticket              |
-| GET    | /api/support/admin/tickets             | Admin    | Admin: Get all tickets             |
-| GET    | /api/support/admin/tickets/:id         | Admin    | Admin: Get ticket details          |
-| POST   | /api/support/admin/tickets/:id/messages| Admin    | Admin: Add message to ticket       |
-| PUT    | /api/support/admin/tickets/:id/status  | Admin    | Admin: Update ticket status        |
+
+| Method | Route                                   | Auth  | Description                  |
+| ------ | --------------------------------------- | ----- | ---------------------------- |
+| POST   | /api/support/tickets                    | User  | Create support ticket        |
+| GET    | /api/support/tickets                    | User  | Get own tickets              |
+| GET    | /api/support/tickets/:id                | User  | Get support ticket details   |
+| POST   | /api/support/tickets/:id/messages       | User  | Add message to ticket        |
+| GET    | /api/support/admin/tickets              | Admin | Admin: Get all tickets       |
+| GET    | /api/support/admin/tickets/:id          | Admin | Admin: Get ticket details    |
+| POST   | /api/support/admin/tickets/:id/messages | Admin | Admin: Add message to ticket |
+| PUT    | /api/support/admin/tickets/:id/status   | Admin | Admin: Update ticket status  |
 
 ### Users
-| Method | Route                         | Auth     | Description                  |
-|--------|-------------------------------|----------|------------------------------|
-| GET    | /api/users/notifications      | User     | Real-time notifications (likes/comments/approvals) |
-| GET    | /api/users/:id                | User     | Get a user                   |
+
+| Method | Route                    | Auth | Description                                        |
+| ------ | ------------------------ | ---- | -------------------------------------------------- |
+| GET    | /api/users/notifications | User | Real-time notifications (likes/comments/approvals) |
+| GET    | /api/users/:id           | User | Get a user                                         |
 
 ### Admin
-| Method | Route                         | Auth     | Description            |
-|--------|-------------------------------|----------|------------------------|
-| GET    | /api/admin/dashboard          | Admin    | Stats + recent data    |
-| GET    | /api/admin/posts              | Admin    | All posts (filterable) |
-| PUT    | /api/admin/posts/:id/approve  | Admin    | Approve post           |
-| PUT    | /api/admin/posts/:id/reject   | Admin    | Reject with reason     |
-| DELETE | /api/admin/posts/:id          | Admin    | Delete post            |
-| GET    | /api/admin/users              | Admin    | All users              |
-| PUT    | /api/admin/users/:id/block    | Admin    | Block user             |
-| PUT    | /api/admin/users/:id/unblock  | Admin    | Unblock user           |
+
+| Method | Route                        | Auth  | Description            |
+| ------ | ---------------------------- | ----- | ---------------------- |
+| GET    | /api/admin/dashboard         | Admin | Stats + recent data    |
+| GET    | /api/admin/posts             | Admin | All posts (filterable) |
+| PUT    | /api/admin/posts/:id/approve | Admin | Approve post           |
+| PUT    | /api/admin/posts/:id/reject  | Admin | Reject with reason     |
+| DELETE | /api/admin/posts/:id         | Admin | Delete post            |
+| GET    | /api/admin/users             | Admin | All users              |
+| PUT    | /api/admin/users/:id/block   | Admin | Block user             |
+| PUT    | /api/admin/users/:id/unblock | Admin | Unblock user           |
 
 ### Logs
-| Method | Route                         | Auth     | Description            |
-|--------|-------------------------------|----------|------------------------|
-| GET    | /api/logs                     | Admin    | All login/logout logs  |
-| GET    | /api/logs/my-sessions         | User     | Own session history    |
+
+| Method | Route                 | Auth  | Description           |
+| ------ | --------------------- | ----- | --------------------- |
+| GET    | /api/logs             | Admin | All login/logout logs |
+| GET    | /api/logs/my-sessions | User  | Own session history   |
 
 ### Uploads
-| Route                         | Description                              |
-|-------------------------------|------------------------------------------|
-| GET /uploads/:filename        | Locally-stored images (Cloudinary fallback) |
+
+| Route                  | Description                                 |
+| ---------------------- | ------------------------------------------- |
+| GET /uploads/:filename | Locally-stored images (Cloudinary fallback) |
 
 ---
 
 ## Security Features
+
 - ✅ JWT tokens — **5-hour expiry for users**, **no expiry for admins**
 - ✅ Session records in DB — invalidated on logout or block
 - ✅ bcryptjs password hashing (salt rounds: 12)
@@ -377,6 +395,7 @@ npm start
 ---
 
 ## Theme Switching
+
 Click the **☀/🌙 icon** in the sidebar. The choice is saved to `localStorage` and applied instantly across all pages via CSS custom properties (`var(--bg-primary)`, `var(--neon)`, etc.).
 
 ---
@@ -399,6 +418,7 @@ npm run build
 ```
 
 ### Cloudinary (Optional)
+
 1. Create a free account at cloudinary.com
 2. Copy Cloud Name, API Key, API Secret into `backend/.env`
 3. Images are auto-optimized and stored in `freelancehub/posts/`
@@ -406,4 +426,4 @@ npm run build
 
 ---
 
-*Designed and Developed by CloudHawk*
+_Designed and Developed by CloudHawk_
