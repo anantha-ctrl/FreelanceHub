@@ -25,6 +25,14 @@ function numbered(text, ref = "nums") {
     children: [new TextRun(text)] });
 }
 
+function pre(text) {
+  return text.split('\n').map(line => new Paragraph({
+    spacing: { before: 0, after: 0 },
+    children: [new TextRun({ text: line, font: "Consolas", size: 16 })]
+  }));
+}
+
+
 // Generic table builder: headers = [..], rows = [[..],[..]]
 function table(headers, rows, widths) {
   const colW = widths || headers.map(() => Math.floor(CONTENT_W / headers.length));
@@ -177,6 +185,70 @@ body.push(bullet("Activity logs with login/logout time, IP, device, and session 
 body.push(bullet("CSV export of activity logs."));
 body.push(bullet("Admin-only protected routes and no session auto-logout for admins."));
 body.push(bullet("Support inbox with live message stream to resolve user helpdesk queries."));
+
+body.push(h2("7.3 Platform Workflows"));
+body.push(h2("7.3.1 Job Posting and Moderation Workflow"));
+body.push(p("1. Creation: A freelancer publishes a job post containing a description, budget, skill tags, and a cover image."));
+body.push(p("2. Pending: The post is initially saved as 'pending' and is kept hidden from public view."));
+body.push(p("3. Review: An administrator reviews the post in their moderation panel and approves or rejects it with a reason."));
+body.push(p("4. Re-evaluation: If a freelancer edits an approved or rejected post, the post automatically reverts back to 'pending' to require re-moderation."));
+body.push(h2("7.3.2 Proposal and Matching Workflow"));
+body.push(p("1. Search: Freelancers discover approved listings in the post feed using search filters and category tags."));
+body.push(p("2. Application: Freelancers visit the detail page (/post/:id) and submit a proposal containing a cover letter and bid rate."));
+body.push(p("3. Notification: The job author (client) is immediately notified of the new proposal submission."));
+body.push(p("4. Decision: The client reviews candidates in their Proposals tracker and updates the proposal status to Accepted or Rejected."));
+body.push(h2("7.3.3 Messaging and Support Workflows"));
+body.push(p("1. Chat Initiation: Users open chat threads directly from proposal cards or freelancer profiles."));
+body.push(p("2. Helpdesk Ticket: Users submit technical support tickets which populate the admin support inbox."));
+body.push(p("3. Real-time Communication: Both modules support active real-time messaging, with mobile views supporting single-pane toggling and Back navigation."));
+
+body.push(h2("7.3.4 Visual Platform Workflows Diagram"));
+const diagramText =
+`+-----------------------------------------------------------------+
+|                     User Registration & Session                 |
+|         [Register] ---> [Login] ---> [5hr Expiring Session]     |
++-----------------------------------------------------------------+
+                                |
+                                v
++-----------------------------------------------------------------+
+|                     Job Posting & Moderation                    |
+|  [Create Post]                                                  |
+|        |                                                        |
+|        v                                                        |
+|  [Post Status: Pending] (Hidden from Feed)                      |
+|        |                                                        |
+|        v                                                        |
+|  [Admin Review] ----(Approve)----> [Post Status: Approved]      |
+|        |                                  |                     |
+|     (Reject)                           (Edit)                   |
+|        v                                  v                     |
+|  [Post Status: Rejected] <--------- [Re-moderated]              |
++-----------------------------------------------------------------+
+                                |
+                                v
++-----------------------------------------------------------------+
+|                     Job Application & Proposals                 |
+|  [Browse Feed] ---> [View Post details] ---> [Submit Proposal]  |
+|                                                   |             |
+|                                                   v             |
+|  [Notify Post Owner] ------------> [Client Reviews Proposal]    |
+|                                                   |             |
+|                                      +------------+------------+|
+|                                      |                         ||
+|                                  (Accept)                  (Reject)
+|                                      v                         v|
+|                              [Open Direct Chat]       [Update Status]
++-----------------------------------------------------------------+
+                                |
+                                v
++-----------------------------------------------------------------+
+|                         Support Helpdesk                        |
+|  [User submits Support Ticket] ---> [Admin Support Inbox Queue] |
+|                                                |                |
+|                                                v                |
+|                                    [Live Support Desk Chat]     |
++-----------------------------------------------------------------+`;
+body.push(...pre(diagramText));
 
 // 8. Implementation Highlights
 body.push(h1("8. Implementation Highlights"));

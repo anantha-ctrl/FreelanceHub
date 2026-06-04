@@ -56,6 +56,85 @@ A modern full-stack social platform for freelancers with an **Instagram-style po
 
 ---
 
+## Platform Workflows
+
+### 1. Job Posting & Content Moderation
+1. **Creation**: A freelancer designs and publishes a job post containing a title, description, budget range, skill requirements, and a cover image.
+2. **Pending Queue**: Upon creation, the post's status is set to `Pending` and is kept hidden from the public feed.
+3. **Admin Moderation**: An administrator reviews the post from the Admin Control Panel. They can either **Approve** it (making it public) or **Reject** it (supplying an edit reason).
+4. **Re-Submission**: If the freelancer modifies the details of an approved or rejected post, the post automatically reverts back to `Pending` status and is re-moderated.
+
+### 2. Proposal Submission & Job Matching
+1. **Browsing**: Freelancers browse approved posts on the Feed using keyword searches or category filtering.
+2. **Detailed View**: The freelancer opens a post (`/post/:id`) to inspect all job parameters, active proposal counts, and client details.
+3. **Application**: The freelancer fills out a proposal form, specifying their bid rate and pitching their experience in a cover letter.
+4. **Review & Action**: The client receives a real-time notification, accesses their Proposals Tracker, and accepts or rejects the candidate.
+
+### 3. Collaboration & Direct Messaging
+1. **Initiation**: A user opens a chat screen directly from a freelancer's proposal card or profile view.
+2. **Active Chat**: A conversation thread is initialized under the Chat module, allowing the user and freelancer to communicate in real-time.
+3. **Responsive Display**: On mobile screens, the chat workspace adapts into a single-pane display, using a custom Back (←) button to return to the active thread list.
+
+### 4. Support Desk Ticketing
+1. **Ticket Submission**: Users experiencing technical issues submit a support request ticket outlining their issue.
+2. **Queue & Status**: The request joins the admin Support Inbox queue. Admin updates the ticket status (`Open`, `In Progress`, or `Resolved`).
+3. **Support Chat**: Admin and users exchange messages directly within the ticket detail screen to solve queries.
+
+### 5. Platform Workflows Flowchart
+
+```mermaid
+graph TD
+    %% Styling
+    classDef user fill:#2e4a9e,stroke:#3b82f6,stroke-width:2px,color:#fff;
+    classDef admin fill:#8b5cf6,stroke:#a78bfa,stroke-width:2px,color:#fff;
+    classDef system fill:#0f172a,stroke:#334155,stroke-width:2px,color:#fff;
+
+    subgraph User Session
+        Reg[User Registration] --> Login[User Login]
+        Login --> AuthUser[Authenticated User]
+        class Reg,Login,AuthUser user;
+    end
+
+    subgraph Content Moderation
+        AuthUser --> CreatePost[Create Post]
+        CreatePost --> PostPending[Post Status: Pending]
+        PostPending --> AdminInbox[Admin Support/Approval Queue]
+        AdminInbox --> Approve{Approve or Reject?}
+        Approve -->|Approve| PostLive[Post Status: Approved / Visible on Feed]
+        Approve -->|Reject| PostRejected[Post Status: Rejected / Reason Stored]
+        PostRejected --> EditPost[User Edits Post]
+        PostLive --> EditPost
+        EditPost --> PostPending
+        class CreatePost,PostPending,PostLive,PostRejected,EditPost user;
+        class AdminInbox,Approve admin;
+    end
+
+    subgraph Job Proposals & Messaging
+        PostLive --> FeedBrowse[Freelancers Browse Feed]
+        FeedBrowse --> PostDetail[View Post Details & Active Proposals]
+        PostDetail --> SubmitProposal[Submit Job Proposal]
+        SubmitProposal --> NotifyClient[Notify Post Owner]
+        NotifyClient --> ClientReview[Client Reviews Proposals Tracker]
+        ClientReview --> PropApprove{Accept or Reject?}
+        PropApprove -->|Accept| StartChat[Open Chat Thread & Direct Message]
+        PropApprove -->|Reject| NotifyCandidate[Candidate Notified of Status]
+        class FeedBrowse,PostDetail,SubmitProposal,StartChat user;
+        class NotifyClient,ClientReview,PropApprove,NotifyCandidate user;
+    end
+
+    subgraph Support Helpdesk
+        AuthUser --> RaiseTicket[Create Support Ticket]
+        RaiseTicket --> AdminSupport[Admin Support Inbox]
+        AdminSupport --> SupportChat[Live Ticket Chat Communication]
+        class RaiseTicket user;
+        class AdminSupport admin;
+        class SupportChat system;
+    end
+```
+
+---
+
+
 ## Project Structure
 
 ```
