@@ -55,13 +55,13 @@ export default function Feed() {
   return (
     <div>
       <PageHeader title="Freelancer Feed" subtitle="Browse approved talent posts">
-        <form onSubmit={handleSearch} className="flex items-center gap-2">
-          <div className="relative">
+        <form onSubmit={handleSearch} className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+          <div className="relative flex-1 sm:flex-none">
             <FiSearch size={14} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--text-muted)' }}/>
             <input placeholder="Search posts…" value={searchInput} onChange={e => setSearchInput(e.target.value)}
-              className="input-field pl-8" style={{ width: 200, height: 36 }}/>
+              className="input-field pl-8 w-full sm:w-[180px]" style={{ height: 36 }}/>
           </div>
-          <Select value={category} onChange={e => setCategory(e.target.value)} style={{ width: 150, height: 36 }}>
+          <Select value={category} onChange={e => setCategory(e.target.value)} className="w-full sm:w-[130px]" style={{ height: 36 }}>
             {CATEGORIES.map(c => <option key={c}>{c}</option>)}
           </Select>
         </form>

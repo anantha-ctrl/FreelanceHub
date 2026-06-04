@@ -6,6 +6,13 @@ const getBaseURL = () => {
   return `http://${hostname}:5001/api`;
 };
 
+export const getAssetURL = (url) => {
+  if (!url) return url;
+  if (typeof url !== 'string') return url;
+  const hostname = typeof window !== 'undefined' ? window.location.hostname : 'localhost';
+  return url.replace(/localhost:5001/g, `${hostname}:5001`).replace(/127\.0\.0\.1:5001/g, `${hostname}:5001`);
+};
+
 const API = axios.create({
   baseURL: getBaseURL(),
   withCredentials: true

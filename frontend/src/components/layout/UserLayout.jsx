@@ -4,6 +4,8 @@ import { motion } from 'framer-motion';
 import { useAuth } from '../../context/AuthContext';
 import { FiGrid, FiList, FiPlusCircle, FiUser, FiBell, FiLogOut, FiMenu, FiX, FiSettings, FiShield, FiHelpCircle, FiBookmark, FiSend, FiBriefcase } from 'react-icons/fi';
 import Logo from '../common/Logo';
+import { ThemeToggle, Avatar } from '../common/UI';
+import NotificationBell from '../user/NotificationBell';
 
 const navItems = [
   { to: '/dashboard', icon: FiGrid, label: 'Dashboard' },
@@ -107,17 +109,36 @@ const Sidebar = ({ open, onClose }) => {
 
 export default function UserLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const location = useLocation();
 
   return (
     <div className="flex h-screen overflow-hidden" style={{ background: 'var(--bg-primary)' }}>
       <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       <main className="flex-1 overflow-y-auto pb-24 md:pb-0">
-        {/* Mobile topbar (menu + brand); the notification bell lives in each page's header. */}
-        <div className="flex md:hidden items-center gap-3 px-4 py-3 sticky top-0 z-30"
+        {/* Mobile topbar */}
+        <div className="flex md:hidden items-center justify-between px-4 py-2.5 sticky top-0 z-30"
           style={{ background: 'var(--header-bg)', borderBottom: '1px solid var(--border)' }}>
-          <button onClick={() => setSidebarOpen(true)} style={{ color: 'var(--text-primary)' }}><FiMenu size={20}/></button>
-          <span className="font-display font-bold text-base" style={{ color: 'var(--text-primary)' }}>FreelanceHub</span>
+          {/* Left: Menu button */}
+          <button onClick={() => setSidebarOpen(true)} style={{ color: 'var(--text-primary)' }} className="p-1 hover:bg-bg-surface-2 rounded-lg">
+            <FiMenu size={20}/>
+          </button>
+          
+          {/* Middle: Brand name & Logo */}
+          <div className="flex items-center gap-2">
+            <Logo size={24} rounded={6} />
+            <span className="font-display font-bold text-sm" style={{ color: 'var(--text-primary)' }}>FreelanceHub</span>
+          </div>
+
+          {/* Right: Theme Toggle, Notifications, Profile Avatar */}
+          <div className="flex items-center gap-2">
+            <ThemeToggle />
+            <NotificationBell />
+            <button onClick={() => navigate('/profile')} className="ml-1 p-0.5 rounded-full hover:opacity-85 transition-opacity flex-shrink-0">
+              <Avatar name={user?.name} src={user?.profileImage} size="sm" />
+            </button>
+          </div>
         </div>
         <motion.div key={location.pathname} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }}>
           <Outlet />
@@ -125,12 +146,23 @@ export default function UserLayout() {
       </main>
       <nav className="mobile-bottom-nav md:hidden">
         <div className="mobile-bottom-inner">
-          {mobileNavItems.map(item => (
-            <NavLink key={item.to} to={item.to} className={({ isActive }) => `bottom-nav-item ${isActive ? 'active' : ''} ${item.to === '/create-post' ? 'bottom-action' : ''}`}>
-              <item.icon size={item.to === '/create-post' ? 24 : 20} />
-              <span>{item.label}</span>
-            </NavLink>
-          ))}
+          {mobileNavItems.map(item => {
+            if (item.to === '/create-post') {
+              return (
+                <div key={item.to} className="flex-1 flex items-center justify-center">
+                  <NavLink to={item.to} className={({ isActive }) => `bottom-action ${isActive ? 'active' : ''}`}>
+                    <item.icon size={24} />
+                  </NavLink>
+                </div>
+              );
+            }
+            return (
+              <NavLink key={item.to} to={item.to} className={({ isActive }) => `bottom-nav-item ${isActive ? 'active' : ''}`}>
+                <item.icon size={20} />
+                <span>{item.label}</span>
+              </NavLink>
+            );
+          })}
         </div>
       </nav>
     </div>

@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import { FiFileText, FiHeart, FiMessageCircle, FiCheckCircle, FiPlusCircle, FiTrendingUp } from 'react-icons/fi';
 import { useAuth } from '../../context/AuthContext';
-import { postAPI, logAPI } from '../../utils/api';
+import { postAPI, logAPI, getAssetURL } from '../../utils/api';
 import { PageHeader, StatCard, Card, Badge, Avatar, Skeleton } from '../../components/common/UI';
 import SessionBar from '../../components/user/SessionBar';
 
@@ -113,7 +113,7 @@ export default function Dashboard() {
                   <div key={p._id} className="flex items-center gap-3 py-2" style={{ borderBottom: '1px solid var(--border)' }}>
                     <div className="w-9 h-9 rounded-lg flex-shrink-0 flex items-center justify-center text-xl"
                       style={{ background: 'var(--bg-surface-2)' }}>
-                      {p.image ? <img src={p.image} className="w-9 h-9 rounded-lg object-cover"/> : '📋'}
+                      {p.image ? <img src={getAssetURL(p.image)} className="w-9 h-9 rounded-lg object-cover"/> : '📋'}
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="text-sm font-medium truncate" style={{ color: 'var(--text-primary)' }}>{p.title}</div>

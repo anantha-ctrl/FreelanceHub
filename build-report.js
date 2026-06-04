@@ -79,7 +79,7 @@ const body = [];
 
 // 1. Abstract
 body.push(h1("1. Abstract"));
-body.push(p("FreelanceHub is a full-stack social platform that lets freelancers showcase their skills through an Instagram-style post feed while giving administrators full moderation control. Users register, create posts (with images), and engage through likes and comments; every post passes through an admin approval workflow before it appears in the public feed. The platform features role-based session management, real-time notifications, a live analytics dashboard, and a premium dark/light theme."));
+body.push(p("FreelanceHub is a full-stack social platform that lets freelancers showcase their skills through an Instagram-style post feed while giving administrators full moderation control. The system provides interactive messaging/chatting, job proposals with custom cover letters and bid rates, a customer support helpdesk, and real-time notifications. Every post passes through an admin approval workflow before appearing in the public feed. The platform features role-based session management, a live analytics dashboard, a premium dark/light theme, and custom mobile-responsive viewport toggle interfaces."));
 body.push(p("The application is built on a React 18 single-page frontend and a Node.js / Express REST API, backed by a MySQL database accessed through the Sequelize ORM. This report documents the system's objectives, architecture, database design, modules, implementation highlights, security measures, the development and bug-fixing work carried out, and testing results."));
 
 // 2. Introduction
@@ -95,6 +95,9 @@ body.push(bullet("Enforce an admin approval workflow before posts go live."));
 body.push(bullet("Enable social engagement through likes and inline comments."));
 body.push(bullet("Deliver real-time notifications and a live analytics dashboard."));
 body.push(bullet("Give administrators moderation tools and detailed activity logs."));
+body.push(bullet("Provide real-time proposal submissions and user-to-user direct messaging."));
+body.push(bullet("Enable support ticket creation and a centralized administrator support desk."));
+body.push(bullet("Ensure absolute mobile responsiveness across all devices and viewport sizes."));
 body.push(h2("2.4 Scope"));
 body.push(p("The system covers the complete user journey (registration to engagement) and the complete admin journey (moderation to reporting). It is a development/learning-grade application running locally on XAMPP's MySQL, with an optional Cloudinary integration for production image hosting."));
 
@@ -162,6 +165,10 @@ body.push(bullet("Real-time notification bell in the header with an unread badge
 body.push(bullet("Live dashboard: post/like/comment stats and a 7-day engagement chart."));
 body.push(bullet("Profile management: photo upload, bio, skills, member-since, change password."));
 body.push(bullet("Post status filter tabs (All / Approved / Pending / Rejected) and session history."));
+body.push(bullet("Submit proposals (bid rates and cover letters) directly to client posts."));
+body.push(bullet("Interactive messaging / chat panel with active conversations."));
+body.push(bullet("Helpdesk ticket creation and interactive admin support desk."));
+body.push(bullet("Single post detail page (/post/:id) for job application and reviews."));
 body.push(h2("7.2 Admin Module"));
 body.push(bullet("Dashboard with live platform statistics and charts."));
 body.push(bullet("Post approval workflow — approve or reject with a reason."));
@@ -169,6 +176,7 @@ body.push(bullet("User management — block or unblock with a reason."));
 body.push(bullet("Activity logs with login/logout time, IP, device, and session status."));
 body.push(bullet("CSV export of activity logs."));
 body.push(bullet("Admin-only protected routes and no session auto-logout for admins."));
+body.push(bullet("Support inbox with live message stream to resolve user helpdesk queries."));
 
 // 8. Implementation Highlights
 body.push(h1("8. Implementation Highlights"));
@@ -182,6 +190,10 @@ body.push(h2("8.4 Engagement Analytics"));
 body.push(p("The user dashboard requests a my-stats endpoint that aggregates the last seven days of likes and comments on the user's posts (bucketed by day) and computes accurate totals across all posts, powering the stat cards and the Recharts engagement graph."));
 body.push(h2("8.5 Image Upload and Serving"));
 body.push(p("Uploads use Multer. When Cloudinary credentials are absent, images are stored on local disk in an auto-created uploads/ folder and served from /uploads with an explicit cross-origin resource policy so the React app can display them."));
+body.push(h2("8.6 Mobile View Responsiveness and Layout"));
+body.push(p("To offer a top-tier mobile experience, multi-pane layouts (Chat, Proposals, Support Desk, and Admin Support Inbox) were optimized. On mobile viewports (width < 768px), these components collapse into a single-pane interface. Dynamic Back buttons in detailed view headers allow users to toggle back to thread lists. The bottom navigation bar has been aligned and updated with a centered '+' button that includes micro-animations and unique active state glowing effects. Standard headers stack vertically on smaller viewports to prevent overflow."));
+body.push(h2("8.7 Local Network Media Delivery Helper"));
+body.push(p("When testing the application on local networks using mobile devices, hardcoded loopback references (localhost/127.0.0.1) caused missing avatars and post images. A utility function getAssetURL was created to rewrite loopback URLs dynamically to the active browser hostname (e.g. the server's local IP address like 192.168.x.x), ensuring that all media resources render flawlessly during local development and remote debugging."));
 
 // 9. Security
 body.push(h1("9. Security Features"));
@@ -211,6 +223,16 @@ body.push(table(["#", "Area", "Work Done"], [
   ["11", "Bug Fix", "Fixed post images not displaying (blocked by Helmet's cross-origin resource policy)."],
   ["12", "Feature", "Enhanced the profile page — photo upload, bio/skills/member-since, post status filter tabs, and change password."],
   ["13", "Docs", "Updated README.md to reflect the real MySQL stack, port, endpoints, and features."],
+  ["14", "Feature", "Integrated real-time proposals status updates, chat notifications, and proposal submissions dynamically into the activity feed."],
+  ["15", "Feature", "Redesigned Landing page showcasing all core platform areas (Feed, Chat, Proposals, Support Desk) with Framer Motion animations."],
+  ["16", "Bug Fix", "Fixed Admin Dashboard pending approvals counter to use correct database count instead of filtering recent posts."],
+  ["17", "Feature", "Made Proposals, Chat Desk, Support Desk, and Admin Support Inbox pages fully responsive on mobile by implementing single-pane toggling viewports and header Back buttons."],
+  ["18", "UI Fix", "Aligned the bottom navigation bar and centered the '+' Create button cleanly on mobile screens; added active state animations in CSS."],
+  ["19", "UI Fix", "Made the PageHeader responsive to stack elements vertically on mobile viewports and hide duplicate headers."],
+  ["20", "Bug Fix", "Resolved missing images on mobile views by adding getAssetURL helper to dynamically rewrite localhost paths to browser hostnames."],
+  ["21", "UI Fix", "Corrected the SVG brand Logo.jsx to cleanly render the custom Freelance_Logo.png image as an img tag."],
+  ["22", "Bug Fix", "Fixed 404 error on 'View Post' link by creating a dedicated single PostDetail page and registering the post/:id route."],
+  ["23", "UI Fix", "Configured custom website tab favicon.png in index.html to statically load the brand icon via the public directory."],
 ], [560, 1700, 7100]));
 
 // 11. Testing
@@ -224,6 +246,10 @@ body.push(table(["Test Case", "Result"], [
   ["Real-time notifications", "Pass — like/comment/approval events appear"],
   ["Dashboard my-stats aggregation", "Pass — accurate 7-day chart and totals"],
   ["Profile photo upload + change password", "Pass — avatar saved, re-login with new password"],
+  ["Submit job proposals and accept/reject", "Pass — status changes and proposal records persist"],
+  ["Direct message exchanges and threads list", "Pass — real-time list updates and message delivery"],
+  ["Submit support ticket and admin chat reply", "Pass — messages render and ticket status updates"],
+  ["Local network testing on mobile devices", "Pass — getAssetURL successfully rewrites hosts and displays images"],
 ], [5200, 4160]));
 
 // 12. Conclusion

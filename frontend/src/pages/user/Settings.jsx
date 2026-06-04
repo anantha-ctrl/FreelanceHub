@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
-import API, { authAPI } from '../../utils/api';
+import API, { authAPI, getAssetURL } from '../../utils/api';
 import { PageHeader, Card, Button, Input, Textarea, Select } from '../../components/common/UI';
 import { FiUser, FiLock, FiSettings, FiCamera } from 'react-icons/fi';
 import toast from 'react-hot-toast';
@@ -136,7 +136,7 @@ export default function Settings() {
                 <div className="flex items-center gap-4 mb-6">
                   <div className="relative">
                     {avatarPreview || user?.profileImage ? (
-                      <img src={avatarPreview || user.profileImage} alt="avatar" className="w-20 h-20 rounded-full object-cover border-2 border-border" />
+                      <img src={getAssetURL(avatarPreview || user.profileImage)} alt="avatar" className="w-20 h-20 rounded-full object-cover border-2 border-border" />
                     ) : (
                       <div className="w-20 h-20 rounded-full flex items-center justify-center text-white text-2xl font-bold"
                         style={{ background: 'linear-gradient(135deg, var(--neon), var(--purple))' }}>{initials}</div>

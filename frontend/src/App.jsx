@@ -22,6 +22,7 @@ import Settings from './pages/user/Settings';
 import Bookmarks from './pages/user/Bookmarks';
 import Proposals from './pages/user/Proposals';
 import Chat from './pages/user/Chat';
+import PostDetail from './pages/user/PostDetail';
 
 // Pages - Admin
 import AdminLayout from './components/layout/AdminLayout';
@@ -102,6 +103,7 @@ function App() {
               <Route path="bookmarks" element={<Bookmarks />} />
               <Route path="proposals" element={<Proposals />} />
               <Route path="chat" element={<Chat />} />
+              <Route path="post/:id" element={<PostDetail />} />
             </Route>
 
             {/* Admin routes */}

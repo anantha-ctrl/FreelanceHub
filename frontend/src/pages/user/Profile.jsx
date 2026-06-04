@@ -1,7 +1,7 @@
 // Profile.jsx
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import API, { postAPI, logAPI, userAPI, authAPI } from '../../utils/api';
+import API, { postAPI, logAPI, userAPI, authAPI, getAssetURL } from '../../utils/api';
 import { FiCamera, FiLock } from 'react-icons/fi';
 import { PageHeader, Card, Badge, Button, Input, Textarea, Modal } from '../../components/common/UI';
 import PostCard from '../../components/user/PostCard';
@@ -92,7 +92,7 @@ export function Profile() {
         <Card className="mb-5">
           <div className="flex items-start gap-5">
             {user?.profileImage
-              ? <img src={user.profileImage} alt={user.name} className="w-16 h-16 rounded-full object-cover flex-shrink-0"/>
+              ? <img src={getAssetURL(user.profileImage)} alt={user.name} className="w-16 h-16 rounded-full object-cover flex-shrink-0"/>
               : <div className="w-16 h-16 rounded-full flex items-center justify-center text-white text-xl font-bold flex-shrink-0"
                   style={{ background: 'linear-gradient(135deg, var(--neon), var(--purple))' }}>{initials}</div>
             }
@@ -156,7 +156,7 @@ export function Profile() {
           <div className="flex items-center gap-4">
             <div className="relative">
               {(avatarPreview || user?.profileImage)
-                ? <img src={avatarPreview || user.profileImage} alt="avatar" className="w-16 h-16 rounded-full object-cover"/>
+                ? <img src={getAssetURL(avatarPreview || user.profileImage)} alt="avatar" className="w-16 h-16 rounded-full object-cover"/>
                 : <div className="w-16 h-16 rounded-full flex items-center justify-center text-white text-xl font-bold"
                     style={{ background: 'linear-gradient(135deg, var(--neon), var(--purple))' }}>{initials}</div>}
               <button type="button" onClick={() => avatarRef.current?.click()}

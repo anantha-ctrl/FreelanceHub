@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FiBriefcase, FiInbox, FiUser, FiDollarSign, FiClock, FiCheck, FiX, FiMessageSquare } from 'react-icons/fi';
+import { FiBriefcase, FiInbox, FiUser, FiDollarSign, FiClock, FiCheck, FiX, FiMessageSquare, FiArrowLeft, FiExternalLink } from 'react-icons/fi';
 import { proposalAPI, postAPI } from '../../utils/api';
 import { PageHeader, Card, Badge, Button, EmptyState, Avatar } from '../../components/common/UI';
 import SessionBar from '../../components/user/SessionBar';
@@ -20,44 +20,65 @@ export default function Proposals() {
   const [selectedPost, setSelectedPost] = useState(null);
   const [receivedProposals, setReceivedProposals] = useState([]);
   const [loadingProposals, setLoadingProposals] = useState(false);
+  const [mobileShowDetails, setMobileShowDetails] = useState(false);
 
-  const fetchSubmitted = async () => {
+  const fetchSubmitted = async (silent = false) => {
     try {
       const res = await proposalAPI.getMyProposals();
       setSubmittedProposals(res.data.proposals || []);
     } catch (err) {
-      toast.error('Failed to load submitted proposals.');
+      if (!silent) toast.error('Failed to load submitted proposals.');
     }
   };
 
-  const fetchMyPosts = async () => {
+  const fetchMyPosts = async (silent = false) => {
     try {
       const res = await postAPI.getMyPosts();
       setMyPosts(res.data.posts || []);
     } catch (err) {
-      toast.error('Failed to load your posts.');
+      if (!silent) toast.error('Failed to load your posts.');
     }
   };
 
-  const loadData = async () => {
-    setLoading(true);
-    if (activeTab === 'submitted') {
-      await fetchSubmitted();
-    } else {
-      await fetchMyPosts();
-      setSelectedPost(null);
-      setReceivedProposals([]);
-    }
-    setLoading(false);
-  };
-
+  // Initial load on tab change
   useEffect(() => {
-    loadData();
+    const init = async () => {
+      setLoading(true);
+      setMobileShowDetails(false);
+      if (activeTab === 'submitted') {
+        await fetchSubmitted(false);
+      } else {
+        await fetchMyPosts(false);
+        setSelectedPost(null);
+        setReceivedProposals([]);
+      }
+      setLoading(false);
+    };
+    init();
   }, [activeTab]);
+
+  // Polling for real-time data updates
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (activeTab === 'submitted') {
+        fetchSubmitted(true);
+      } else {
+        fetchMyPosts(true);
+        if (selectedPost) {
+          proposalAPI.getPostProposals(selectedPost._id || selectedPost.id)
+            .then(res => setReceivedProposals(res.data.proposals || []))
+            .catch(() => {});
+        }
+      }
+    }, 4000);
+
+    return () => clearInterval(interval);
+  }, [activeTab, selectedPost]);
 
   // Load proposals for a specific post of mine
   const handleSelectPost = async (post) => {
     setSelectedPost(post);
+    setMobileShowDetails(true);
     setLoadingProposals(true);
     try {
       const res = await proposalAPI.getPostProposals(post._id || post.id);
@@ -209,7 +230,7 @@ export default function Proposals() {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-5" style={{ minHeight: '450px' }}>
               {/* Left Column: My Posts list */}
-              <Card className="md:col-span-1 flex flex-col p-0 overflow-hidden" style={{ maxHeight: '600px' }}>
+              <Card className={`md:col-span-1 flex flex-col p-0 overflow-hidden ${mobileShowDetails ? 'hidden md:flex' : 'flex'}`} style={{ maxHeight: '600px' }}>
                 <div className="p-4 border-b font-display font-bold text-sm" style={{ borderColor: 'var(--border)', color: 'var(--text-primary)' }}>
                   My Postings
                 </div>
@@ -238,9 +259,26 @@ export default function Proposals() {
               </Card>
 
               {/* Right Column: Candidates list */}
-              <Card className="md:col-span-2 flex flex-col p-0 overflow-hidden" style={{ maxHeight: '600px' }}>
-                <div className="p-4 border-b font-display font-bold text-sm" style={{ borderColor: 'var(--border)', color: 'var(--text-primary)' }}>
-                  {selectedPost ? `Applications for: ${selectedPost.title}` : 'Select a posting to view applications'}
+              <Card className={`md:col-span-2 flex flex-col p-0 overflow-hidden ${!mobileShowDetails ? 'hidden md:flex' : 'flex'}`} style={{ maxHeight: '600px' }}>
+                <div className="p-4 border-b font-display font-bold text-sm flex items-center gap-3" style={{ borderColor: 'var(--border)', color: 'var(--text-primary)' }}>
+                  {mobileShowDetails && (
+                    <button 
+                      onClick={() => setMobileShowDetails(false)} 
+                      className="md:hidden p-1.5 hover:bg-bg-surface-2 rounded-lg flex items-center justify-center border mr-1"
+                      style={{ borderColor: 'var(--border)', color: 'var(--text-secondary)' }}
+                      title="Back to Postings"
+                    >
+                      <FiArrowLeft size={14}/>
+                    </button>
+                  )}
+                  <span className="flex-1 truncate">
+                    {selectedPost ? `Applications: ${selectedPost.title}` : 'Select a posting to view applications'}
+                  </span>
+                  {selectedPost && (
+                    <a href={`/post/${selectedPost._id || selectedPost.id}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-xs flex-shrink-0" style={{ color: 'var(--neon)' }}>
+                      View Post <FiExternalLink size={12}/>
+                    </a>
+                  )}
                 </div>
                 <div className="flex-1 overflow-y-auto p-4">
                   {!selectedPost ? (

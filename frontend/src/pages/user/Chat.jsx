@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { FiSend, FiMessageSquare, FiSearch, FiInfo } from 'react-icons/fi';
+import { FiSend, FiMessageSquare, FiSearch, FiInfo, FiArrowLeft } from 'react-icons/fi';
 import { messageAPI, userAPI } from '../../utils/api';
 import { useAuth } from '../../context/AuthContext';
 import { PageHeader, Card, Button, Avatar } from '../../components/common/UI';
@@ -190,7 +190,7 @@ export default function Chat() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5" style={{ height: 'calc(100vh - 240px)', minHeight: '480px' }}>
           
           {/* Left panel: active chat threads */}
-          <Card className="md:col-span-1 flex flex-col p-0 overflow-hidden">
+          <Card className={`md:col-span-1 flex flex-col p-0 overflow-hidden ${activeConversation ? 'hidden md:flex' : 'flex'}`}>
             <div className="p-4 border-b flex items-center gap-2" style={{ borderColor: 'var(--border)' }}>
               <div className="relative flex-1">
                 <FiSearch size={14} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--text-muted)' }}/>
@@ -265,13 +265,21 @@ export default function Chat() {
           </Card>
           
           {/* Right panel: Chat messages */}
-          <Card className="md:col-span-2 flex flex-col p-0 overflow-hidden relative">
+          <Card className={`md:col-span-2 flex flex-col p-0 overflow-hidden relative ${!activeConversation ? 'hidden md:flex' : 'flex'}`}>
             {activeConversation ? (
               <div className="flex flex-col h-full">
                 {/* Chat Header */}
                 <div className="p-4 border-b flex items-center justify-between" style={{ borderColor: 'var(--border)' }}>
                   <div className="flex items-center gap-3">
-                    <div className="relative">
+                    <button
+                      onClick={() => setActiveConversation(null)}
+                      className="md:hidden p-1.5 hover:bg-bg-surface-2 rounded-lg flex items-center justify-center border mr-1 flex-shrink-0"
+                      style={{ borderColor: 'var(--border)', color: 'var(--text-secondary)' }}
+                      title="Back to Chats"
+                    >
+                      <FiArrowLeft size={14}/>
+                    </button>
+                    <div className="relative flex-shrink-0">
                       <Avatar name={activeConversation.partner?.name} src={activeConversation.partner?.profileImage} size="md"/>
                       {activeConversation.partner?.isOnline && (
                         <span

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { supportAPI } from '../../utils/api';
 import { PageHeader, Card, Badge, Button, Avatar, Select } from '../../components/common/UI';
-import { FiSend, FiInbox, FiPhone, FiMail, FiUser, FiCheckSquare, FiXCircle, FiPlay } from 'react-icons/fi';
+import { FiSend, FiInbox, FiPhone, FiMail, FiUser, FiCheckSquare, FiXCircle, FiPlay, FiArrowLeft } from 'react-icons/fi';
 import toast from 'react-hot-toast';
 
 export default function SupportInbox() {
@@ -113,7 +113,7 @@ export default function SupportInbox() {
       <div className="p-6">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5" style={{ height: 'calc(100vh - 200px)', minHeight: '480px' }}>
           {/* Left Panel: list of user tickets */}
-          <Card className="md:col-span-1 flex flex-col overflow-hidden p-0">
+          <Card className={`md:col-span-1 flex flex-col overflow-hidden p-0 ${activeTicket ? 'hidden md:flex' : 'flex'}`}>
             <div className="p-4 border-b font-display font-bold text-sm" style={{ borderColor: 'var(--border)', color: 'var(--text-primary)' }}>
               All Inbound Requests
             </div>
@@ -149,28 +149,41 @@ export default function SupportInbox() {
           </Card>
 
           {/* Right Panel: Chat Room & Ticket Controls */}
-          <Card className="md:col-span-2 flex flex-col overflow-hidden p-0 relative">
+          <Card className={`md:col-span-2 flex flex-col overflow-hidden p-0 relative ${!activeTicket ? 'hidden md:flex' : 'flex'}`}>
             {activeTicketDetails ? (
               <div className="flex flex-col h-full">
                 {/* Chat Header controls */}
                 <div className="p-4 border-b flex flex-col sm:flex-row sm:items-center justify-between gap-3" style={{ borderColor: 'var(--border)' }}>
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <Avatar name={activeTicketDetails.user?.name} src={activeTicketDetails.user?.profileImage} size="sm" />
-                      <div>
-                        <h3 className="font-semibold text-xs" style={{ color: 'var(--text-primary)' }}>
-                          {activeTicketDetails.user?.name}
-                        </h3>
-                        <div className="flex items-center gap-2.5 text-[10px]" style={{ color: 'var(--text-muted)' }}>
-                          <span className="flex items-center gap-0.5"><FiMail size={10}/> {activeTicketDetails.user?.email}</span>
-                          {activeTicketDetails.user?.mobile && (
-                            <span className="flex items-center gap-0.5"><FiPhone size={10}/> {activeTicketDetails.user?.mobile}</span>
-                          )}
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={() => {
+                        setActiveTicket(null);
+                        setActiveTicketDetails(null);
+                      }}
+                      className="md:hidden p-1.5 hover:bg-bg-surface-2 rounded-lg flex items-center justify-center border mr-1 flex-shrink-0"
+                      style={{ borderColor: 'var(--border)', color: 'var(--text-secondary)' }}
+                      title="Back to Inbox"
+                    >
+                      <FiArrowLeft size={14}/>
+                    </button>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <Avatar name={activeTicketDetails.user?.name} src={activeTicketDetails.user?.profileImage} size="sm" />
+                        <div>
+                          <h3 className="font-semibold text-xs" style={{ color: 'var(--text-primary)' }}>
+                            {activeTicketDetails.user?.name}
+                          </h3>
+                          <div className="flex items-center gap-2.5 text-[10px]" style={{ color: 'var(--text-muted)' }}>
+                            <span className="flex items-center gap-0.5"><FiMail size={10}/> {activeTicketDetails.user?.email}</span>
+                            {activeTicketDetails.user?.mobile && (
+                              <span className="flex items-center gap-0.5"><FiPhone size={10}/> {activeTicketDetails.user?.mobile}</span>
+                            )}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                    <div className="mt-2 text-xs font-semibold" style={{ color: 'var(--text-primary)' }}>
-                      Topic: <span className="font-medium" style={{ color: 'var(--text-secondary)' }}>{activeTicketDetails.subject}</span>
+                      <div className="mt-2 text-xs font-semibold" style={{ color: 'var(--text-primary)' }}>
+                        Topic: <span className="font-medium" style={{ color: 'var(--text-secondary)' }}>{activeTicketDetails.subject}</span>
+                      </div>
                     </div>
                   </div>
 

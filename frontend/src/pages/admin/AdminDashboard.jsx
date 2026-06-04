@@ -107,11 +107,11 @@ export default function AdminDashboard() {
                   </h2>
                   <Link to="/admin/posts" className="btn-ghost text-xs py-1 px-2.5">View All</Link>
                 </div>
-                {data?.recentPosts?.filter(p => p.approvalStatus === 'pending').length === 0 ? (
+                {data?.pendingApprovals?.length === 0 ? (
                   <div className="text-center py-8 text-sm" style={{ color: 'var(--text-muted)' }}>All caught up! ✦</div>
                 ) : (
                   <div className="space-y-2">
-                    {data?.recentPosts?.filter(p => p.approvalStatus === 'pending').slice(0,4).map(p => (
+                    {data?.pendingApprovals?.slice(0,4).map(p => (
                       <div key={p._id} className="flex items-center gap-3 py-2" style={{ borderBottom: '1px solid var(--border)' }}>
                         <div className="flex-1 min-w-0">
                           <div className="text-sm font-medium truncate" style={{ color: 'var(--text-primary)' }}>{p.title}</div>

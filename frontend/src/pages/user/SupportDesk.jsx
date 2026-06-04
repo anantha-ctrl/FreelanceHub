@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FiPlus, FiSend, FiMessageSquare, FiInfo, FiCheckCircle } from 'react-icons/fi';
+import { FiPlus, FiSend, FiMessageSquare, FiInfo, FiCheckCircle, FiArrowLeft } from 'react-icons/fi';
 import { supportAPI } from '../../utils/api';
 import { useAuth } from '../../context/AuthContext';
 import { PageHeader, Card, Badge, Button, Input, Textarea, Modal, Avatar } from '../../components/common/UI';
@@ -126,7 +126,7 @@ export default function SupportDesk() {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5" style={{ height: 'calc(100vh - 240px)', minHeight: '450px' }}>
           {/* Left panel: list of tickets */}
-          <Card className="md:col-span-1 flex flex-col overflow-hidden p-0">
+          <Card className={`md:col-span-1 flex flex-col overflow-hidden p-0 ${activeTicket ? 'hidden md:flex' : 'flex'}`}>
             <div className="p-4 border-b font-display font-bold text-sm" style={{ borderColor: 'var(--border)', color: 'var(--text-primary)' }}>
               My Requests
             </div>
@@ -161,17 +161,30 @@ export default function SupportDesk() {
           </Card>
 
           {/* Right panel: Active Chat */}
-          <Card className="md:col-span-2 flex flex-col overflow-hidden p-0 relative">
+          <Card className={`md:col-span-2 flex flex-col overflow-hidden p-0 relative ${!activeTicket ? 'hidden md:flex' : 'flex'}`}>
             {activeTicketDetails ? (
               <div className="flex flex-col h-full">
                 {/* Chat Header */}
                 <div className="p-4 border-b flex items-center justify-between" style={{ borderColor: 'var(--border)' }}>
-                  <div>
-                    <h3 className="font-display font-bold text-sm" style={{ color: 'var(--text-primary)' }}>{activeTicketDetails.subject}</h3>
-                    <div className="flex items-center gap-1.5 mt-0.5">
-                      <span className="text-xs" style={{ color: 'var(--text-muted)' }}>ID: {activeTicketDetails.id.substring(0,8)}</span>
-                      <span className="text-xs" style={{ color: 'var(--text-muted)' }}>·</span>
-                      <Badge status={getStatusBadgeType(activeTicketDetails.status)}>{activeTicketDetails.status}</Badge>
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={() => {
+                        setActiveTicket(null);
+                        setActiveTicketDetails(null);
+                      }}
+                      className="md:hidden p-1.5 hover:bg-bg-surface-2 rounded-lg flex items-center justify-center border mr-1 flex-shrink-0"
+                      style={{ borderColor: 'var(--border)', color: 'var(--text-secondary)' }}
+                      title="Back to Requests"
+                    >
+                      <FiArrowLeft size={14}/>
+                    </button>
+                    <div>
+                      <h3 className="font-display font-bold text-sm" style={{ color: 'var(--text-primary)' }}>{activeTicketDetails.subject}</h3>
+                      <div className="flex items-center gap-1.5 mt-0.5">
+                        <span className="text-xs" style={{ color: 'var(--text-muted)' }}>ID: {activeTicketDetails.id.substring(0,8)}</span>
+                        <span className="text-xs" style={{ color: 'var(--text-muted)' }}>·</span>
+                        <Badge status={getStatusBadgeType(activeTicketDetails.status)}>{activeTicketDetails.status}</Badge>
+                      </div>
                     </div>
                   </div>
                 </div>

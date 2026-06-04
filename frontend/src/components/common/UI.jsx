@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import NotificationBell from '../user/NotificationBell';
 import { useTheme } from '../../context/ThemeContext';
 import { FiSun, FiMoon } from 'react-icons/fi';
+import { getAssetURL } from '../../utils/api';
 
 // ─── THEME TOGGLE ───
 export const ThemeToggle = () => {
@@ -19,16 +20,20 @@ export const ThemeToggle = () => {
 
 // ─── PAGE HEADER ───
 export const PageHeader = ({ title, subtitle, children }) => (
-  <div className="flex items-center justify-between px-6 py-4 sticky top-0 z-20"
+  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-6 py-4 sticky top-0 z-20"
     style={{ background: 'var(--header-bg)', backdropFilter: 'blur(12px)', borderBottom: '1px solid var(--border)' }}>
     <div>
       <h1 className="font-display font-bold text-xl" style={{ color: 'var(--text-primary)' }}>{title}</h1>
       {subtitle && <p className="text-sm mt-0.5" style={{ color: 'var(--text-muted)' }}>{subtitle}</p>}
     </div>
-    <div className="flex items-center gap-2">
-      {children}
-      <ThemeToggle />
-      <NotificationBell />
+    <div className="flex items-center gap-2 justify-between sm:justify-end w-full sm:w-auto">
+      <div className="flex items-center gap-2 flex-1 sm:flex-none">
+        {children}
+      </div>
+      <div className="hidden md:flex items-center gap-2">
+        <ThemeToggle />
+        <NotificationBell />
+      </div>
     </div>
   </div>
 );
@@ -113,7 +118,7 @@ export const Badge = ({ status, children }) => (
 export const Avatar = ({ name, src, size = 'md' }) => {
   const sizes = { sm: 'w-7 h-7 text-xs', md: 'w-9 h-9 text-sm', lg: 'w-14 h-14 text-lg' };
   const initials = name?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0,2) || 'U';
-  if (src) return <img src={src} alt={name} className={`${sizes[size]} rounded-full object-cover`}/>;
+  if (src) return <img src={getAssetURL(src)} alt={name} className={`${sizes[size]} rounded-full object-cover`}/>;
   return (
     <div className={`${sizes[size]} rounded-full flex items-center justify-center text-white font-bold flex-shrink-0`}
       style={{ background: 'linear-gradient(135deg, var(--neon), var(--purple))' }}>{initials}</div>

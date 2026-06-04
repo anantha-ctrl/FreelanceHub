@@ -295,9 +295,6 @@ h1, h2, h3, h4 { font-family: 'Syne', sans-serif; }
 .bottom-nav-item.active {
   color: var(--neon-light);
 }
-.bottom-nav-item.active .bottom-action {
-  background: transparent;
-}
 .bottom-action {
   background: rgba(59,130,246,0.12);
   color: var(--neon);
@@ -308,6 +305,15 @@ h1, h2, h3, h4 { font-family: 'Syne', sans-serif; }
   align-items: center;
   justify-content: center;
   box-shadow: 0 0 0 1px rgba(255,255,255,0.08);
+  transition: all 0.2s ease;
+}
+.bottom-action:hover {
+  transform: scale(1.05);
+}
+.bottom-action.active {
+  background: var(--neon);
+  color: #ffffff;
+  box-shadow: var(--shadow-neon);
 }
 .bottom-action span {
   display: none;

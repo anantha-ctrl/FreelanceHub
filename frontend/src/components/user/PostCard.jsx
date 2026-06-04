@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { FiHeart, FiMessageCircle, FiShare2, FiMoreHorizontal, FiEdit2, FiTrash2, FiCheck, FiX, FiBookmark, FiSend } from 'react-icons/fi';
 import { Avatar, Badge, Modal, Button, Input, Textarea } from '../common/UI';
-import { postAPI, bookmarkAPI, proposalAPI } from '../../utils/api';
+import { postAPI, bookmarkAPI, proposalAPI, getAssetURL } from '../../utils/api';
 import { useAuth } from '../../context/AuthContext';
 import toast from 'react-hot-toast';
 
@@ -139,7 +139,7 @@ export default function PostCard({ post, onLike, onDelete, onBookmarkToggle, sho
       <div className="relative h-44 flex-shrink-0 overflow-hidden"
         style={{ background: 'linear-gradient(135deg, var(--bg-surface-2), var(--bg-surface-3))' }}>
         {post.image ? (
-          <img src={post.image} alt={post.title} className="w-full h-full object-cover"/>
+          <img src={getAssetURL(post.image)} alt={post.title} className="w-full h-full object-cover"/>
         ) : (
           <div className="w-full h-full flex items-center justify-center text-5xl select-none">{emoji}</div>
         )}

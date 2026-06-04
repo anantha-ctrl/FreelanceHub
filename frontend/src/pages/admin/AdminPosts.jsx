@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { FiSearch, FiCheck, FiX, FiTrash2, FiEye } from 'react-icons/fi';
-import { adminAPI } from '../../utils/api';
+import { adminAPI, getAssetURL } from '../../utils/api';
 import { PageHeader, Card, Badge, Avatar, Table, Tr, Td, Button, Select, Modal, Skeleton } from '../../components/common/UI';
 import toast from 'react-hot-toast';
 
@@ -172,7 +172,7 @@ export default function AdminPosts() {
               <div className="rounded-2xl overflow-hidden min-h-[220px] flex items-center justify-center"
                 style={{ background: 'linear-gradient(135deg, var(--bg-surface-2), var(--bg-surface-3))', border: '1px solid var(--border)' }}>
                 {reviewPost.image ? (
-                  <img src={reviewPost.image} alt={reviewPost.title} className="w-full h-full object-cover"/>
+                  <img src={getAssetURL(reviewPost.image)} alt={reviewPost.title} className="w-full h-full object-cover"/>
                 ) : (
                   <div className="text-6xl" aria-hidden="true">📋</div>
                 )}

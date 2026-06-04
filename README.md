@@ -33,6 +33,11 @@ A modern full-stack social platform for freelancers with an **Instagram-style po
 - Profile management: **photo upload**, bio, skills, "member since", and **change password**
 - Post status filter tabs (All / Approved / Pending / Rejected)
 - Activity / session history
+- **Interactive Chat / Direct Messaging**: Thread-based message lists with auto-refreshing conversation panes.
+- **Job Proposals**: Apply to client postings with custom cover letters and bid rates, and monitor application status.
+- **Support Helpdesk**: Submit tickets and message support administrators directly.
+- **Single Post Detail View**: View job specs, user details, and apply via `/post/:id` routing.
+- **Local Network Testing**: Helper to rewrite loopback URLs for mobile browser testing over local Wi-Fi.
 
 ### Admin Panel
 - Dashboard with live stats and charts
@@ -42,6 +47,7 @@ A modern full-stack social platform for freelancers with an **Instagram-style po
 - CSV export of logs
 - Admin-only protected routes
 - **No session auto-logout for admins** (admins stay logged in until they sign out)
+- **Support Inbox**: Manage, review, and reply to user support desk tickets.
 
 ### Theme
 - **Dark mode** (default): Navy `#0a0f1e` · Charcoal · Neon Blue `#3b82f6` · Purple `#8b5cf6`
@@ -88,9 +94,9 @@ freelancehub/
     │   ├── components/
     │   │   ├── common/
     │   │   │   ├── UI.jsx           # PageHeader, StatCard, Button, Input, Modal, Table…
-    │   │   │   └── Logo.jsx         # SVG brand logo
+    │   │   │   └── Logo.jsx         # Redesigned branding logo
     │   │   ├── layout/
-    │   │   │   ├── UserLayout.jsx   # User sidebar + routing shell
+    │   │   │   ├── UserLayout.jsx   # User sidebar + routing shell + responsive bottom navigation
     │   │   │   └── AdminLayout.jsx  # Admin sidebar + routing shell
     │   │   └── user/
     │   │       ├── PostCard.jsx        # Feed card with like + inline comments
@@ -100,11 +106,11 @@ freelancehub/
     │   │   ├── AuthContext.jsx  # JWT storage, role-based auto-logout, axios interceptors
     │   │   └── ThemeContext.jsx # Dark/light toggle with persistence
     │   ├── pages/
-    │   │   ├── auth/            # Landing, Login, Register
-    │   │   ├── user/            # Dashboard, Feed, CreatePost, Profile (+Notifications, EditPost)
-    │   │   └── admin/           # AdminDashboard, AdminPosts, AdminUsers, ActivityLogs
-    │   ├── utils/api.js         # Axios API wrappers for all endpoints
-    │   ├── styles/index.css     # CSS variables, dark/light, animations
+    │   │   ├── auth/            # Landing (animated), Login, Register
+    │   │   ├── user/            # Dashboard, Feed, CreatePost, Profile, Notifications, EditPost, PostDetail, Chat, Proposals, SupportDesk, Bookmarks, Settings
+    │   │   └── admin/           # AdminDashboard, AdminPosts, AdminUsers, ActivityLogs, SupportInbox
+    │   ├── utils/api.js         # Axios API wrappers with local network asset utility
+    │   ├── styles/index.css     # CSS variables, dark/light, animations, responsive design styles
     │   ├── App.jsx              # Route definitions + protected routes
     │   └── index.js
     ├── tailwind.config.js
@@ -213,6 +219,39 @@ npm start
 | POST   | /api/posts/:id/like           | User     | Toggle like                  |
 | POST   | /api/posts/:id/comment        | User     | Add comment                  |
 | GET    | /api/posts/:id/comments       | Public   | Get comments                 |
+
+### Bookmarks
+| Method | Route                         | Auth     | Description                  |
+|--------|-------------------------------|----------|------------------------------|
+| POST   | /api/bookmarks/:postId        | User     | Toggle post bookmark status  |
+| GET    | /api/bookmarks                | User     | List all bookmarked posts    |
+
+### Proposals
+| Method | Route                         | Auth     | Description                  |
+|--------|-------------------------------|----------|------------------------------|
+| POST   | /api/proposals/apply/:postId  | User     | Apply for a job post         |
+| GET    | /api/proposals/post/:postId   | User     | Get all proposals for a post |
+| GET    | /api/proposals/my             | User     | Get own submitted proposals  |
+| PUT    | /api/proposals/:id/status     | User     | Update proposal status       |
+
+### Messages & Chat
+| Method | Route                         | Auth     | Description                  |
+|--------|-------------------------------|----------|------------------------------|
+| POST   | /api/messages                 | User     | Send a chat message          |
+| GET    | /api/messages/conversations   | User     | Get user's conversation list |
+| GET    | /api/messages/history/:partnerId| User   | Get message history with user|
+
+### Support Helpdesk
+| Method | Route                                  | Auth     | Description                        |
+|--------|----------------------------------------|----------|------------------------------------|
+| POST   | /api/support/tickets                   | User     | Create support ticket              |
+| GET    | /api/support/tickets                   | User     | Get own tickets                    |
+| GET    | /api/support/tickets/:id               | User     | Get support ticket details         |
+| POST   | /api/support/tickets/:id/messages      | User     | Add message to ticket              |
+| GET    | /api/support/admin/tickets             | Admin    | Admin: Get all tickets             |
+| GET    | /api/support/admin/tickets/:id         | Admin    | Admin: Get ticket details          |
+| POST   | /api/support/admin/tickets/:id/messages| Admin    | Admin: Add message to ticket       |
+| PUT    | /api/support/admin/tickets/:id/status  | Admin    | Admin: Update ticket status        |
 
 ### Users
 | Method | Route                         | Auth     | Description                  |
