@@ -254,6 +254,72 @@ export default function Landing() {
         </motion.div>
       </div>
 
+      {/* Workflow Timeline Section */}
+      <div className="px-4 sm:px-8 py-12 md:py-16 max-w-5xl mx-auto relative z-10">
+        <div className="text-center max-w-2xl mx-auto mb-12">
+          <div className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: 'var(--neon-light)' }}>How It Works</div>
+          <h2 className="font-display font-bold text-2xl sm:text-4xl" style={{ color: 'var(--text-primary)' }}>The Platform Workflow</h2>
+          <p className="text-xs sm:text-sm mt-3" style={{ color: 'var(--text-secondary)' }}>A seamless journey from registration to collaboration, backed by rigorous moderation.</p>
+        </div>
+
+        <div className="relative border-l md:border-l-0 md:before:absolute md:before:top-1/2 md:before:bottom-0 md:before:left-0 md:before:right-0 md:before:h-[2px] md:before:bg-gradient-to-r md:before:from-blue-500/10 md:before:via-purple-500/10 md:before:to-blue-500/10 md:before:-translate-y-1/2 flex flex-col md:flex-row md:justify-between gap-8 md:gap-4 pl-6 md:pl-0">
+          {[
+            {
+              step: '01',
+              title: 'Posting & Moderation',
+              desc: 'Freelancers create posts. Posts enter a pending queue and are reviewed by admins before appearing live in the feed.',
+              color: 'var(--neon)'
+            },
+            {
+              step: '02',
+              title: 'Proposal & Matching',
+              desc: 'Users browse live posts, view full details at post/:id, and submit proposals with cover letters and bid rates.',
+              color: 'var(--green)'
+            },
+            {
+              step: '03',
+              title: 'Chat & Collaboration',
+              desc: 'Accepted proposals automatically unlock direct user-to-client message channels with auto-refreshing conversation threads.',
+              color: 'var(--purple)'
+            },
+            {
+              step: '04',
+              title: 'Support & Security',
+              desc: 'Integrated support ticket desk helps resolve user issues, while 5h sessions and strict logging keep the app safe.',
+              color: 'var(--amber)'
+            }
+          ].map((flow, idx) => (
+            <motion.div
+              key={flow.step}
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-50px" }}
+              transition={{ delay: idx * 0.1, duration: 0.5 }}
+              className="relative flex-1 surface-card p-6 md:pt-8 md:text-center group transition-all duration-300 hover:-translate-y-1 border"
+              style={{ borderColor: 'var(--border)' }}
+            >
+              {/* Dot indicator */}
+              <div 
+                className="absolute top-6 -left-[31px] md:left-1/2 md:top-0 md:-translate-x-1/2 md:-translate-y-1/2 w-6 h-6 rounded-full flex items-center justify-center border-4 border-slate-900 transition-transform duration-300 group-hover:scale-110"
+                style={{ backgroundColor: flow.color }}
+              >
+                <div className="w-1.5 h-1.5 rounded-full bg-white" />
+              </div>
+
+              <div className="font-display font-extrabold text-2xl md:text-3xl mb-3 opacity-10 group-hover:opacity-30 transition-opacity" style={{ color: flow.color }}>
+                {flow.step}
+              </div>
+              <h3 className="font-display font-bold text-sm md:text-base mb-2" style={{ color: 'var(--text-primary)' }}>
+                {flow.title}
+              </h3>
+              <p className="text-xs leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+                {flow.desc}
+              </p>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+
       {/* Bottom CTA Banner */}
       <div className="px-4 sm:px-8 pb-16 md:pb-24 max-w-5xl mx-auto relative z-10">
         <motion.div 
@@ -285,5 +351,5 @@ export default function Landing() {
       </div>
     </div>
   );
-}
+}       
 
