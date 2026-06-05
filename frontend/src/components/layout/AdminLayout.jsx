@@ -5,6 +5,9 @@ import { useAuth } from '../../context/AuthContext';
 import { adminAPI } from '../../utils/api';
 import { useSessionTimer } from '../user/SessionBar';
 import { FiGrid, FiCheckSquare, FiUsers, FiActivity, FiLogOut, FiShield, FiMenu, FiX, FiList, FiClock, FiMessageSquare, FiSettings } from 'react-icons/fi';
+import Logo from '../common/Logo';
+import { ThemeToggle, Avatar } from '../common/UI';
+import NotificationBell from '../user/NotificationBell';
 
 const getAdminNav = (pendingPosts) => [
   { to: '/admin',        icon: FiGrid,        label: 'Dashboard',    exact: true },
@@ -106,6 +109,8 @@ const Sidebar = ({ open, onClose, pendingPosts }) => {
 export default function AdminLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [pendingPosts, setPendingPosts] = useState(0);
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const location = useLocation();
 
   useEffect(() => {
@@ -130,10 +135,28 @@ export default function AdminLayout() {
     <div className="flex h-screen overflow-hidden" style={{ background: 'var(--bg-primary)' }}>
       <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} pendingPosts={pendingPosts}/>
       <main className="flex-1 overflow-y-auto">
-        <div className="flex md:hidden items-center gap-3 px-4 py-3 sticky top-0 z-30"
+        {/* Mobile view header: menu bar (left), brand logo/name (middle), dark/light toggle & notification & profile (right) */}
+        <div className="flex md:hidden items-center justify-between px-4 py-2.5 sticky top-0 z-30"
           style={{ background: 'var(--header-bg)', borderBottom: '1px solid var(--border)' }}>
-          <button onClick={() => setSidebarOpen(true)} style={{ color: 'var(--text-primary)' }}><FiMenu size={20}/></button>
-          <span className="font-display font-bold text-sm" style={{ color: 'var(--text-primary)' }}>Admin Panel</span>
+          {/* Left: Menu button */}
+          <button onClick={() => setSidebarOpen(true)} style={{ color: 'var(--text-primary)' }} className="p-1 hover:bg-bg-surface-2 rounded-lg">
+            <FiMenu size={20}/>
+          </button>
+          
+          {/* Middle: Brand name & Logo */}
+          <div className="flex items-center gap-2">
+            <Logo size={24} rounded={6} />
+            <span className="font-display font-bold text-sm" style={{ color: 'var(--text-primary)' }}>Admin Panel</span>
+          </div>
+
+          {/* Right: Theme Toggle, Notifications, Profile Avatar */}
+          <div className="flex items-center gap-2">
+            <ThemeToggle />
+            <NotificationBell />
+            <button onClick={() => navigate('/admin/profile')} className="ml-1 p-0.5 rounded-full hover:opacity-85 transition-opacity flex-shrink-0">
+              <Avatar name={user?.name} src={user?.profileImage} size="sm" />
+            </button>
+          </div>
         </div>
         <motion.div key={location.pathname} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }}>
           <Outlet/>

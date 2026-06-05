@@ -64,10 +64,14 @@ export const AuthProvider = ({ children }) => {
     const restoreSession = async () => {
       try {
         const res = await API.get('/auth/me');
-        dispatch({
-          type: 'LOGIN_SUCCESS',
-          payload: { user: res.data.user, token: null, sessionExpiry: null }
-        });
+        if (res.data.success && res.data.user) {
+          dispatch({
+            type: 'LOGIN_SUCCESS',
+            payload: { user: res.data.user, token: null, sessionExpiry: null }
+          });
+        } else {
+          dispatch({ type: 'LOADING_DONE' });
+        }
       } catch {
         dispatch({ type: 'LOADING_DONE' });
       }
@@ -84,6 +88,10 @@ export const AuthProvider = ({ children }) => {
       const res = await API.post('/auth/login', { email, password });
       const { token, user, sessionExpiresIn } = res.data;
       const sessionExpiry = sessionExpiresIn ? Date.now() + sessionExpiresIn : null;
+
+      if (token) {
+        API.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+      }
 
       dispatch({ type: 'LOGIN_SUCCESS', payload: { user, token, sessionExpiry } });
       toast.success(`Welcome back, ${user.name}!`);
@@ -112,6 +120,7 @@ export const AuthProvider = ({ children }) => {
       if (!silent) await API.post('/auth/logout');
     } catch {}
     clearSession();
+    delete API.defaults.headers.common['Authorization'];
     dispatch({ type: 'LOGOUT' });
     if (!silent) toast.success('Logged out successfully.');
   }, []);

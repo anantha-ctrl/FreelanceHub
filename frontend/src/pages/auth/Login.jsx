@@ -52,7 +52,12 @@ export function Login() {
           value={form.email} onChange={e => setForm(f => ({...f, email: e.target.value}))}
           autoCapitalize="none" autoCorrect="off" spellCheck="false"/>
         <div>
-          <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>Password</label>
+          <div className="flex justify-between items-center mb-1.5">
+            <label className="block text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>Password</label>
+            <Link to="/forgot-password" style={{ color: 'var(--neon-light)', fontSize: '11.5px', fontWeight: 500 }}>
+              Forgot password?
+            </Link>
+          </div>
           <div className="relative">
             <input type={showPass ? 'text' : 'password'} placeholder="Your password" required className="input-field pr-10"
               value={form.password} onChange={e => setForm(f => ({...f, password: e.target.value}))}

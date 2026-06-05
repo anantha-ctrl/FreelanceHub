@@ -1,3 +1,4 @@
+
 import axios from 'axios';
 
 const getBaseURL = () => {
@@ -25,7 +26,9 @@ export const authAPI = {
   logout: () => API.post('/auth/logout'),
   getMe: () => API.get('/auth/me'),
   updateProfile: (data) => API.put('/auth/update-profile', data),
-  changePassword: (data) => API.put('/auth/change-password', data)
+  changePassword: (data) => API.put('/auth/change-password', data),
+  forgotPassword: (data) => API.post('/auth/forgot-password', data),
+  resetPassword: (data) => API.post('/auth/reset-password', data)
 };
 
 // Posts

@@ -143,6 +143,9 @@ const logout = async (req, res) => {
 
 const getMe = async (req, res) => {
   try {
+    if (!req.user) {
+      return res.json({ success: false, message: 'Not authenticated.' });
+    }
     const user = await User.findByPk(req.user.id);
     res.json({ success: true, user: normalize(user) });
   } catch (err) {
@@ -201,4 +204,70 @@ const changePassword = async (req, res) => {
   }
 };
 
-module.exports = { register, login, logout, getMe, updateProfile, changePassword };
+const forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) {
+      return res.status(400).json({ success: false, message: 'Email is required.' });
+    }
+
+    const user = await User.scope('withPassword').findOne({ where: { email: email.trim().toLowerCase() } });
+    if (!user) {
+      return res.json({ success: true, message: 'If that email exists, a reset link was sent.' });
+    }
+
+    // Generate token signed with user's current password hash + JWT_SECRET
+    const secret = process.env.JWT_SECRET + user.password;
+    const token = jwt.sign({ id: user.id }, secret, { expiresIn: '15m' });
+
+    // Return the reset link in the response for development testing convenience
+    const resetUrl = `${process.env.CLIENT_URL || 'http://localhost:3000'}/reset-password?token=${token}&id=${user.id}`;
+    
+    console.log('----------------------------------------');
+    console.log(`Password reset requested for ${user.email}`);
+    console.log(`Reset URL: ${resetUrl}`);
+    console.log('----------------------------------------');
+
+    res.json({
+      success: true,
+      message: 'Password reset link generated successfully.',
+      resetUrl
+    });
+  } catch (err) {
+    console.error('Forgot password error:', err);
+    res.status(500).json({ success: false, message: 'Failed to request password reset.' });
+  }
+};
+
+const resetPassword = async (req, res) => {
+  try {
+    const { id, token, newPassword } = req.body;
+    if (!id || !token || !newPassword) {
+      return res.status(400).json({ success: false, message: 'Missing required fields.' });
+    }
+
+    const user = await User.scope('withPassword').findByPk(id);
+    if (!user) {
+      return res.status(400).json({ success: false, message: 'Invalid or expired reset link.' });
+    }
+
+    // Verify token using user's current password hash + JWT_SECRET
+    const secret = process.env.JWT_SECRET + user.password;
+    try {
+      jwt.verify(token, secret);
+    } catch (err) {
+      return res.status(400).json({ success: false, message: 'Invalid or expired reset token.' });
+    }
+
+    // Update password (triggers Sequelize hooks)
+    user.password = newPassword;
+    await user.save();
+
+    res.json({ success: true, message: 'Password reset successfully. You can now login.' });
+  } catch (err) {
+    console.error('Reset password error:', err);
+    res.status(500).json({ success: false, message: 'Failed to reset password.' });
+  }
+};
+
+module.exports = { register, login, logout, getMe, updateProfile, changePassword, forgotPassword, resetPassword };

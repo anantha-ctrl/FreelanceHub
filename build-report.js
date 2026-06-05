@@ -266,6 +266,10 @@ body.push(h2("8.6 Mobile View Responsiveness and Layout"));
 body.push(p("To offer a top-tier mobile experience, multi-pane layouts (Chat, Proposals, Support Desk, and Admin Support Inbox) were optimized. On mobile viewports (width < 768px), these components collapse into a single-pane interface. Dynamic Back buttons in detailed view headers allow users to toggle back to thread lists. The bottom navigation bar has been aligned and updated with a centered '+' button that includes micro-animations and unique active state glowing effects. Standard headers stack vertically on smaller viewports to prevent overflow."));
 body.push(h2("8.7 Local Network Media Delivery Helper"));
 body.push(p("When testing the application on local networks using mobile devices, hardcoded loopback references (localhost/127.0.0.1) caused missing avatars and post images. A utility function getAssetURL was created to rewrite loopback URLs dynamically to the active browser hostname (e.g. the server's local IP address like 192.168.x.x), ensuring that all media resources render flawlessly during local development and remote debugging."));
+body.push(h2("8.8 Forgot Password and Reset Password Flow"));
+body.push(p("A complete forgot/reset password flow was implemented using a stateless JWT approach. When a user requests a reset link via POST /api/auth/forgot-password, the server signs a short-lived JWT (15 minutes) using a secret derived from JWT_SECRET concatenated with the user's current bcrypt password hash. This design means the token automatically becomes invalid the moment the password is changed — providing single-use semantics without adding any new columns to the users table and without requiring a database migration."));
+body.push(p("The reset URL is returned in the API response for development environments (enabling testing without SMTP configuration). The frontend ForgotPassword.jsx page renders the link in a styled Development Mock Link block. The ResetPassword.jsx page reads token and id from URL query parameters, validates password length and confirmation match, and calls POST /api/auth/reset-password. On success, the user is redirected to the login page. An automated end-to-end test script verified all five steps: token generation, password reset, login with new password, token replay rejection, and password restoration."));
+
 
 // 9. Security
 body.push(h1("9. Security Features"));
@@ -277,6 +281,8 @@ body.push(bullet("Helmet security headers, with a cross-origin policy for served
 body.push(bullet("xss-clean middleware against cross-site scripting."));
 body.push(bullet("Role-based route guards separating user and admin access."));
 body.push(bullet("Blocked-user session termination and a 401 auto-logout interceptor."));
+body.push(bullet("Stateless password reset tokens signed with JWT_SECRET + password hash — auto-invalidate on first use and on any subsequent password change, with no additional DB columns required."));
+
 
 // 10. Development Work Log
 body.push(h1("10. Development and Enhancement Log"));
@@ -305,7 +311,12 @@ body.push(table(["#", "Area", "Work Done"], [
   ["21", "UI Fix", "Corrected the SVG brand Logo.jsx to cleanly render the custom Freelance_Logo.png image as an img tag."],
   ["22", "Bug Fix", "Fixed 404 error on 'View Post' link by creating a dedicated single PostDetail page and registering the post/:id route."],
   ["23", "UI Fix", "Configured custom website tab favicon.png in index.html to statically load the brand icon via the public directory."],
+  ["24", "UI Fix", "Redesigned Admin panel mobile header layout: hamburger menu (top-left), brand logo/name (top-center), theme toggle + notification bell + profile icon (top-right) using a strict 3-column flex grid."],
+  ["25", "Bug Fix", "Fixed delete button in admin action tables not triggering API calls — corrected confirmation modal state handling and wired through the delete handler correctly."],
+  ["26", "Feature", "Implemented complete Forgot Password / Reset Password flow: stateless JWT token (15-minute expiry, signed with JWT_SECRET + bcrypt hash), POST /api/auth/forgot-password, POST /api/auth/reset-password, ForgotPassword.jsx, ResetPassword.jsx pages with dev mock link display."],
+  ["27", "Security", "Stateless reset token design ensures tokens automatically invalidate on first use and on any subsequent password change, with zero database schema changes required."],
 ], [560, 1700, 7100]));
+
 
 // 11. Testing
 body.push(h1("11. Testing"));
@@ -322,7 +333,12 @@ body.push(table(["Test Case", "Result"], [
   ["Direct message exchanges and threads list", "Pass — real-time list updates and message delivery"],
   ["Submit support ticket and admin chat reply", "Pass — messages render and ticket status updates"],
   ["Local network testing on mobile devices", "Pass — getAssetURL successfully rewrites hosts and displays images"],
+  ["Forgot password — generate reset link", "Pass — token returned in response, valid for 15 minutes"],
+  ["Reset password — apply token and login", "Pass — password changed, login successful with new password"],
+  ["Reset password — replay attack prevention", "Pass — second use of same token returns 400 Invalid or expired"],
+  ["Admin mobile header layout", "Pass — hamburger (left), logo (center), icons (right) at 375px viewport"],
 ], [5200, 4160]));
+
 
 // 12. Conclusion
 body.push(h1("12. Conclusion"));
@@ -335,7 +351,9 @@ body.push(bullet("Direct messaging and collaboration requests between users."));
 body.push(bullet("Follow/unfollow and a personalised feed."));
 body.push(bullet("Payment integration for premium freelancer profiles."));
 body.push(bullet("Full-text search and advanced filtering."));
+body.push(bullet("Email delivery for password reset links via SMTP (e.g. Nodemailer + SendGrid)."));
 body.push(bullet("Cloud deployment with CI/CD and managed database hosting."));
+
 
 // ---------- DOCUMENT ----------
 const doc = new Document({

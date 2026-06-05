@@ -97,7 +97,7 @@ export default function AdminPosts() {
         <Card padding={false}>
           <Table headers={['Post', 'Category', 'Author', 'Budget', 'Status', 'Created', 'Actions']} loading={loading && posts.length === 0}>
             {posts.map(p => (
-              <Tr key={p._id}>
+              <Tr key={p._id || p.id}>
                 <Td bold>
                   <div className="max-w-xs">
                     <div className="truncate text-sm font-medium" style={{ color: 'var(--text-primary)' }}>{p.title}</div>
@@ -126,7 +126,7 @@ export default function AdminPosts() {
                           style={{ background: 'rgba(16,185,129,0.12)', color: 'var(--green)' }}>
                           <FiEye size={12}/> Review & Approve
                         </button>
-                        <button onClick={() => openReject(p._id)}
+                        <button onClick={() => openReject(p._id || p.id)}
                           className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors"
                           style={{ background: 'rgba(239,68,68,0.1)', color: 'var(--red)' }}>
                           <FiX size={12}/> Reject
@@ -140,7 +140,7 @@ export default function AdminPosts() {
                         <FiEye size={12}/> View
                       </button>
                     )}
-                    <button onClick={() => del(p._id)}
+                    <button onClick={() => del(p._id || p.id)}
                       className="w-7 h-7 flex items-center justify-center rounded-lg transition-colors"
                       style={{ background: 'rgba(239,68,68,0.08)', color: 'var(--red)' }}>
                       <FiTrash2 size={13}/>
@@ -242,8 +242,8 @@ export default function AdminPosts() {
               <Button variant="ghost" onClick={closeReview}>Close</Button>
               {reviewPost.approvalStatus === 'pending' && (
                 <>
-                  <Button variant="danger" onClick={() => openReject(reviewPost._id)}><FiX size={14}/> Reject</Button>
-                  <Button variant="success" onClick={() => approve(reviewPost._id)}><FiCheck size={14}/> Approve Post</Button>
+                  <Button variant="danger" onClick={() => openReject(reviewPost._id || reviewPost.id)}><FiX size={14}/> Reject</Button>
+                  <Button variant="success" onClick={() => approve(reviewPost._id || reviewPost.id)}><FiCheck size={14}/> Approve Post</Button>
                 </>
               )}
             </div>

@@ -1,6 +1,6 @@
 # FreelanceHub — Full-Stack Freelancer Social Platform
 
-A modern full-stack social platform for freelancers with an **Instagram-style post feed**, admin moderation, role-based sessions, real-time notifications, and a **premium dark/light theme**.
+A modern full-stack social platform for freelancers with an **Instagram-style post feed**, admin moderation, role-based sessions, real-time notifications, a **forgot/reset password flow**, and a **premium dark/light theme**.
 
 ---
 
@@ -26,6 +26,7 @@ A modern full-stack social platform for freelancers with an **Instagram-style po
 ### User Panel
 
 - Register · Login · Secure 5-hour auto-expiring session
+- **Forgot Password / Reset Password**: Stateless JWT-based password reset flow — generates a secure 15-minute reset link without any DB schema changes. Token auto-invalidates after use.
 - Create / Edit / Delete freelancer posts with image upload
 - Instagram-style infinite-scroll feed with search & category filter
 - Like & **inline comment** on approved posts (live)
@@ -50,6 +51,7 @@ A modern full-stack social platform for freelancers with an **Instagram-style po
 - Admin-only protected routes
 - **No session auto-logout for admins** (admins stay logged in until they sign out)
 - **Support Inbox**: Manage, review, and reply to user support desk tickets.
+- **Responsive Mobile Header**: On mobile, the admin header shows hamburger menu (top-left), brand logo (top-center), and theme toggle + notification bell + profile icon (top-right).
 
 ### Theme
 
@@ -191,7 +193,7 @@ freelancehub/
     │   │   ├── AuthContext.jsx  # JWT storage, role-based auto-logout, axios interceptors
     │   │   └── ThemeContext.jsx # Dark/light toggle with persistence
     │   ├── pages/
-    │   │   ├── auth/            # Landing (animated), Login, Register
+    │   │   ├── auth/            # Landing, Login, Register, ForgotPassword, ResetPassword
     │   │   ├── user/            # Dashboard, Feed, CreatePost, Profile, Notifications, EditPost, PostDetail, Chat, Proposals, SupportDesk, Bookmarks, Settings
     │   │   └── admin/           # AdminDashboard, AdminPosts, AdminUsers, ActivityLogs, SupportInbox
     │   ├── utils/api.js         # Axios API wrappers with local network asset utility
@@ -284,14 +286,16 @@ npm start
 
 ### Auth
 
-| Method | Route                     | Auth   | Description                      |
-| ------ | ------------------------- | ------ | -------------------------------- |
-| POST   | /api/auth/register        | Public | Create account                   |
-| POST   | /api/auth/login           | Public | Login + create session           |
-| POST   | /api/auth/logout          | User   | End session                      |
-| GET    | /api/auth/me              | User   | Get profile                      |
-| PUT    | /api/auth/update-profile  | User   | Update profile (+ avatar upload) |
-| PUT    | /api/auth/change-password | User   | Change password                  |
+| Method | Route                      | Auth   | Description                                           |
+| ------ | -------------------------- | ------ | ----------------------------------------------------- |
+| POST   | /api/auth/register         | Public | Create account                                        |
+| POST   | /api/auth/login            | Public | Login + create session                                |
+| POST   | /api/auth/logout           | User   | End session                                           |
+| GET    | /api/auth/me               | User   | Get profile                                           |
+| PUT    | /api/auth/update-profile   | User   | Update profile (+ avatar upload)                      |
+| PUT    | /api/auth/change-password  | User   | Change password                                       |
+| POST   | /api/auth/forgot-password  | Public | Generate stateless 15-min password reset link         |
+| POST   | /api/auth/reset-password   | Public | Validate reset token and save new password            |
 
 ### Posts
 
@@ -391,6 +395,7 @@ npm start
 - ✅ Role-based route guards (user / admin)
 - ✅ Blocked user session termination
 - ✅ Axios 401 interceptor for auto-logout on expired tokens
+- ✅ **Stateless password reset tokens** — signed with `JWT_SECRET + user.password_hash`; auto-invalidate after first use and on any password change (no DB columns required)
 
 ---
 

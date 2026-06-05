@@ -18,7 +18,6 @@ const relTime = (iso) => {
 
 export default function NotificationBell() {
   const { user, updateUser } = useAuth();
-  const isAdmin = user?.role === 'admin';
   const [notifications, setNotifications] = useState([]);
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
@@ -33,15 +32,11 @@ export default function NotificationBell() {
   }, []);
 
   useEffect(() => {
-    if (isAdmin) return;
     load();
     // Poll for real-time updates while the app is open.
     const id = setInterval(load, 25000);
     return () => clearInterval(id);
-  }, [load, isAdmin]);
-
-  // Notifications are a user-only feature; admins use their own panels.
-  if (isAdmin) return null;
+  }, [load]);
 
   const unread = notifications.filter(n => new Date(n.time).getTime() > readAt).length;
 

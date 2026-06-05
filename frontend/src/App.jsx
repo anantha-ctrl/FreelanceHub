@@ -8,6 +8,8 @@ import { ThemeProvider } from './context/ThemeContext';
 import Landing from './pages/auth/Landing';
 import Login from './pages/auth/Login';
 import Register from './pages/auth/Register';
+import ForgotPassword from './pages/auth/ForgotPassword';
+import ResetPassword from './pages/auth/ResetPassword';
 
 // Pages - User
 import UserLayout from './components/layout/UserLayout';
@@ -89,6 +91,8 @@ function App() {
             <Route path="/" element={<Landing />} />
             <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
             <Route path="/register" element={<PublicRoute><Register /></PublicRoute>} />
+            <Route path="/forgot-password" element={<PublicRoute><ForgotPassword /></PublicRoute>} />
+            <Route path="/reset-password" element={<PublicRoute><ResetPassword /></PublicRoute>} />
 
             {/* User routes */}
             <Route path="/" element={<ProtectedRoute><UserLayout /></ProtectedRoute>}>
