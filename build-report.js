@@ -201,54 +201,71 @@ body.push(h2("7.3.3 Messaging and Support Workflows"));
 body.push(p("1. Chat Initiation: Users open chat threads directly from proposal cards or freelancer profiles."));
 body.push(p("2. Helpdesk Ticket: Users submit technical support tickets which populate the admin support inbox."));
 body.push(p("3. Real-time Communication: Both modules support active real-time messaging, with mobile views supporting single-pane toggling and Back navigation."));
+body.push(h2("7.3.4 Forgot Password and Account Recovery Workflow"));
+body.push(p("1. Request: The user clicks \"Forgot password?\" on the login page and submits their registered email address."));
+body.push(p("2. Token Generation: The server looks up the user, generates a JWT signed with JWT_SECRET + user.password_hash (expires in 15 minutes), and returns the reset URL in the API response. In development this URL is shown directly on-screen; in production it would be sent via email (SMTP/SendGrid)."));
+body.push(p("3. Reset: The user navigates to /reset-password?token=...&id=..., enters and confirms a new password, and submits the form."));
+body.push(p("4. Validation: The server decodes the token, fetches the user's current password hash, and verifies the JWT against it. On success the new password is hashed and saved, immediately invalidating the token since the hash has changed."));
+body.push(p("5. Login: The user is redirected to /login and can sign in with the new password. Attempting to reuse the same token returns 400 Invalid or expired reset token."));
 
-body.push(h2("7.3.4 Visual Platform Workflows Diagram"));
+body.push(h2("7.3.5 Visual Platform Workflows Diagram"));
 const diagramText =
-`+-----------------------------------------------------------------+
-|                     User Registration & Session                 |
-|         [Register] ---> [Login] ---> [5hr Expiring Session]     |
-+-----------------------------------------------------------------+
-                                |
-                                v
-+-----------------------------------------------------------------+
-|                     Job Posting & Moderation                    |
-|  [Create Post]                                                  |
-|        |                                                        |
-|        v                                                        |
-|  [Post Status: Pending] (Hidden from Feed)                      |
-|        |                                                        |
-|        v                                                        |
-|  [Admin Review] ----(Approve)----> [Post Status: Approved]      |
-|        |                                  |                     |
-|     (Reject)                           (Edit)                   |
-|        v                                  v                     |
-|  [Post Status: Rejected] <--------- [Re-moderated]              |
-+-----------------------------------------------------------------+
-                                |
-                                v
-+-----------------------------------------------------------------+
-|                     Job Application & Proposals                 |
-|  [Browse Feed] ---> [View Post details] ---> [Submit Proposal]  |
-|                                                   |             |
-|                                                   v             |
-|  [Notify Post Owner] ------------> [Client Reviews Proposal]    |
-|                                                   |             |
-|                                      +------------+------------+|
-|                                      |                         ||
-|                                  (Accept)                  (Reject)
-|                                      v                         v|
-|                              [Open Direct Chat]       [Update Status]
-+-----------------------------------------------------------------+
-                                |
-                                v
-+-----------------------------------------------------------------+
-|                         Support Helpdesk                        |
-|  [User submits Support Ticket] ---> [Admin Support Inbox Queue] |
-|                                                |                |
-|                                                v                |
-|                                    [Live Support Desk Chat]     |
-+-----------------------------------------------------------------+`;
+`+-------------------------------------------------------------------+
+|           User Registration, Session & Account Recovery           |
+|                                                                   |
+|  [Register] ---------> [Login] -------> [5hr Expiring Session]   |
+|                            |                                      |
+|                        (Forgot?)                                  |
+|                            v                                      |
+|               [Submit Email] --> [Generate Reset Token]          |
+|                                  (JWT · 15 min · stateless)      |
+|                                            |                      |
+|                                            v                      |
+|               [Reset Link] -> [Set New Password] -> [Login]      |
+|                               (Token auto-invalidated on use)    |
++-------------------------------------------------------------------+
+                              |
+                              v
++-------------------------------------------------------------------+
+|                    Job Posting & Moderation                       |
+|  [Create Post]                                                    |
+|        |                                                          |
+|        v                                                          |
+|  [Post Status: Pending] (Hidden from Feed)                        |
+|        |                                                          |
+|        v                                                          |
+|  [Admin Review] --(Approve)--> [Post Status: Approved]           |
+|        |                               |                          |
+|     (Reject)                        (Edit)                        |
+|        v                               v                          |
+|  [Post Status: Rejected] <------ [Re-moderated: Pending]         |
++-------------------------------------------------------------------+
+                              |
+                              v
++-------------------------------------------------------------------+
+|                   Job Application & Proposals                     |
+|  [Browse Feed] --> [View Post Details] --> [Submit Proposal]     |
+|                                                   |               |
+|                                                   v               |
+|  [Notify Post Owner] -------> [Client Reviews Proposal]          |
+|                                                   |               |
+|                                    +--------------+-----------+  |
+|                                    |                          |  |
+|                               (Accept)                   (Reject) |
+|                                    v                          v  |
+|                          [Open Direct Chat]         [Update Status]|
++-------------------------------------------------------------------+
+                              |
+                              v
++-------------------------------------------------------------------+
+|                       Support Helpdesk                            |
+|  [User Submits Support Ticket] --> [Admin Support Inbox Queue]   |
+|                                              |                    |
+|                                              v                    |
+|                                 [Live Support Desk Chat]          |
++-------------------------------------------------------------------+`;
 body.push(...pre(diagramText));
+
 
 // 8. Implementation Highlights
 body.push(h1("8. Implementation Highlights"));

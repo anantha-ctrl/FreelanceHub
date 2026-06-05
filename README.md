@@ -89,7 +89,17 @@ A modern full-stack social platform for freelancers with an **Instagram-style po
 2. **Queue & Status**: The request joins the admin Support Inbox queue. Admin updates the ticket status (`Open`, `In Progress`, or `Resolved`).
 3. **Support Chat**: Admin and users exchange messages directly within the ticket detail screen to solve queries.
 
-### 5. Platform Workflows Flowchart
+### 5. Forgot Password & Account Recovery
+
+1. **Request**: The user clicks "Forgot password?" on the login page and submits their email address.
+2. **Token Generation**: The server generates a short-lived JWT (15 minutes) signed with `JWT_SECRET + user.password_hash` and returns the reset URL in the API response (shown on-screen for development environments — replaceable with SMTP in production).
+3. **Reset**: The user navigates to `/reset-password?token=...&id=...`, enters a new password, and submits the form.
+4. **Validation**: The server verifies the token against the user's current password hash, hashes and saves the new password. The token is automatically invalidated after the first successful use (since the hash changes).
+5. **Login**: The user is redirected to the login page and can sign in with the new password.
+
+> **Security design**: No database columns are added — the token is stateless. Replaying an already-used token returns `400 Invalid or expired reset token.`
+
+### 6. Platform Workflows Flowchart
 
 ```mermaid
 graph TD
@@ -97,44 +107,53 @@ graph TD
     classDef user fill:#2e4a9e,stroke:#3b82f6,stroke-width:2px,color:#fff;
     classDef admin fill:#8b5cf6,stroke:#a78bfa,stroke-width:2px,color:#fff;
     classDef system fill:#0f172a,stroke:#334155,stroke-width:2px,color:#fff;
+    classDef security fill:#065f46,stroke:#10b981,stroke-width:2px,color:#fff;
 
-    subgraph User Session
-        Reg[User Registration] --> Login[User Login]
-        Login --> AuthUser[Authenticated User]
+    subgraph "User Session & Account Recovery"
+        Reg["User Registration"] --> Login["User Login"]
+        Login --> AuthUser["Authenticated User"]
+        Login --> ForgotPw["Forgot Password?"]
+        ForgotPw --> GenToken["Generate Reset Token\n(JWT · 15 min · stateless)"]
+        GenToken --> ResetLink["Reset Link Delivered\n(dev: on-screen · prod: email)"]
+        ResetLink --> ResetPw["User Sets New Password"]
+        ResetPw --> TokenInvalid["Token Auto-Invalidated"]
+        TokenInvalid --> Login
         class Reg,Login,AuthUser user;
+        class ForgotPw,GenToken,ResetLink,ResetPw security;
+        class TokenInvalid security;
     end
 
-    subgraph Content Moderation
-        AuthUser --> CreatePost[Create Post]
-        CreatePost --> PostPending[Post Status: Pending]
-        PostPending --> AdminInbox[Admin Support/Approval Queue]
-        AdminInbox --> Approve{Approve or Reject?}
-        Approve -->|Approve| PostLive[Post Status: Approved / Visible on Feed]
-        Approve -->|Reject| PostRejected[Post Status: Rejected / Reason Stored]
-        PostRejected --> EditPost[User Edits Post]
+    subgraph "Content Moderation"
+        AuthUser --> CreatePost["Create Post"]
+        CreatePost --> PostPending["Post Status: Pending"]
+        PostPending --> AdminInbox["Admin Approval Queue"]
+        AdminInbox --> Approve{"Approve or Reject?"}
+        Approve -->|Approve| PostLive["Post Status: Approved\nVisible on Feed"]
+        Approve -->|Reject| PostRejected["Post Status: Rejected\nReason Stored"]
+        PostRejected --> EditPost["User Edits Post"]
         PostLive --> EditPost
         EditPost --> PostPending
         class CreatePost,PostPending,PostLive,PostRejected,EditPost user;
         class AdminInbox,Approve admin;
     end
 
-    subgraph Job Proposals & Messaging
-        PostLive --> FeedBrowse[Freelancers Browse Feed]
-        FeedBrowse --> PostDetail[View Post Details & Active Proposals]
-        PostDetail --> SubmitProposal[Submit Job Proposal]
-        SubmitProposal --> NotifyClient[Notify Post Owner]
-        NotifyClient --> ClientReview[Client Reviews Proposals Tracker]
-        ClientReview --> PropApprove{Accept or Reject?}
-        PropApprove -->|Accept| StartChat[Open Chat Thread & Direct Message]
-        PropApprove -->|Reject| NotifyCandidate[Candidate Notified of Status]
+    subgraph "Job Proposals & Messaging"
+        PostLive --> FeedBrowse["Browse Feed"]
+        FeedBrowse --> PostDetail["View Post Details\n& Active Proposals"]
+        PostDetail --> SubmitProposal["Submit Job Proposal"]
+        SubmitProposal --> NotifyClient["Notify Post Owner"]
+        NotifyClient --> ClientReview["Client Reviews Proposals Tracker"]
+        ClientReview --> PropApprove{"Accept or Reject?"}
+        PropApprove -->|Accept| StartChat["Open Chat Thread\n& Direct Message"]
+        PropApprove -->|Reject| NotifyCandidate["Candidate Notified of Status"]
         class FeedBrowse,PostDetail,SubmitProposal,StartChat user;
         class NotifyClient,ClientReview,PropApprove,NotifyCandidate user;
     end
 
-    subgraph Support Helpdesk
-        AuthUser --> RaiseTicket[Create Support Ticket]
-        RaiseTicket --> AdminSupport[Admin Support Inbox]
-        AdminSupport --> SupportChat[Live Ticket Chat Communication]
+    subgraph "Support Helpdesk"
+        AuthUser --> RaiseTicket["Create Support Ticket"]
+        RaiseTicket --> AdminSupport["Admin Support Inbox"]
+        AdminSupport --> SupportChat["Live Ticket Chat Communication"]
         class RaiseTicket user;
         class AdminSupport admin;
         class SupportChat system;
