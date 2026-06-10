@@ -7,6 +7,13 @@ const AuditLog = require('./AuditLog');
 const Bookmark = require('./Bookmark');
 const Proposal = require('./Proposal');
 const Message = require('./Message');
+const Advertisement = require('./Advertisement');
+const NewVehicleDetails = require('./NewVehicleDetails');
+const UsedVehicleDetails = require('./UsedVehicleDetails');
+const DailyReport = require('./DailyReport');
+const FileRequest = require('./FileRequest');
+const Notification = require('./Notification');
+const Announcement = require('./Announcement');
 
 User.hasMany(Post, { foreignKey: 'userId', as: 'posts' });
 Post.belongsTo(User, { foreignKey: 'userId', as: 'user' });
@@ -57,4 +64,35 @@ Message.belongsTo(User, { foreignKey: 'senderId', as: 'sender' });
 User.hasMany(Message, { foreignKey: 'receiverId', as: 'receivedMessages' });
 Message.belongsTo(User, { foreignKey: 'receiverId', as: 'receiver' });
 
-module.exports = { sequelize, User, Post, LoginLog, Like, Comment, BlockedUser, SupportTicket, SupportMessage, AuditLog, Bookmark, Proposal, Message };
+// ─── Car Hive: Advertisements ───
+User.hasMany(Advertisement, { foreignKey: 'userId', as: 'advertisements' });
+Advertisement.belongsTo(User, { foreignKey: 'userId', as: 'user' });
+
+Advertisement.hasOne(NewVehicleDetails, { foreignKey: 'advertisementId', as: 'newDetails', onDelete: 'CASCADE' });
+NewVehicleDetails.belongsTo(Advertisement, { foreignKey: 'advertisementId', as: 'advertisement' });
+
+Advertisement.hasOne(UsedVehicleDetails, { foreignKey: 'advertisementId', as: 'usedDetails', onDelete: 'CASCADE' });
+UsedVehicleDetails.belongsTo(Advertisement, { foreignKey: 'advertisementId', as: 'advertisement' });
+
+// ─── Car Hive: Daily Reports ───
+User.hasMany(DailyReport, { foreignKey: 'userId', as: 'dailyReports' });
+DailyReport.belongsTo(User, { foreignKey: 'userId', as: 'user' });
+
+// ─── Car Hive: File Requests ───
+User.hasMany(FileRequest, { foreignKey: 'userId', as: 'fileRequests' });
+FileRequest.belongsTo(User, { foreignKey: 'userId', as: 'user' });
+
+// ─── Car Hive: Notifications ───
+User.hasMany(Notification, { foreignKey: 'userId', as: 'notifications' });
+Notification.belongsTo(User, { foreignKey: 'userId', as: 'user' });
+
+// ─── Car Hive: Announcements ───
+User.hasMany(Announcement, { foreignKey: 'createdBy', as: 'announcements' });
+Announcement.belongsTo(User, { foreignKey: 'createdBy', as: 'author' });
+
+module.exports = {
+  sequelize, User, Post, LoginLog, Like, Comment, BlockedUser,
+  SupportTicket, SupportMessage, AuditLog, Bookmark, Proposal, Message,
+  Advertisement, NewVehicleDetails, UsedVehicleDetails, DailyReport,
+  FileRequest, Notification, Announcement
+};

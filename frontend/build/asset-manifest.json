@@ -1,14 +1,14 @@
 {
   "files": {
-    "main.css": "/static/css/main.736dcdb7.css",
-    "main.js": "/static/js/main.68ab3fad.js",
+    "main.css": "/static/css/main.ba77e0dd.css",
+    "main.js": "/static/js/main.1376695b.js",
     "static/media/Freelance_Logo.png": "/static/media/Freelance_Logo.c56b95d46767266f1c54.png",
     "index.html": "/index.html",
-    "main.736dcdb7.css.map": "/static/css/main.736dcdb7.css.map",
-    "main.68ab3fad.js.map": "/static/js/main.68ab3fad.js.map"
+    "main.ba77e0dd.css.map": "/static/css/main.ba77e0dd.css.map",
+    "main.1376695b.js.map": "/static/js/main.1376695b.js.map"
   },
   "entrypoints": [
-    "static/css/main.736dcdb7.css",
-    "static/js/main.68ab3fad.js"
+    "static/css/main.ba77e0dd.css",
+    "static/js/main.1376695b.js"
   ]
 }

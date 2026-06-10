@@ -67,7 +67,7 @@ export const AuthProvider = ({ children }) => {
         if (res.data.success && res.data.user) {
           dispatch({
             type: 'LOGIN_SUCCESS',
-            payload: { user: res.data.user, token: null, sessionExpiry: null }
+            payload: { user: res.data.user, token: null, sessionExpiry: res.data.sessionExpiry }
           });
         } else {
           dispatch({ type: 'LOADING_DONE' });
@@ -83,9 +83,9 @@ export const AuthProvider = ({ children }) => {
     // Session is cleared on backend via clearCookie
   };
 
-  const login = async (email, password) => {
+  const login = async (identifier, password) => {
     try {
-      const res = await API.post('/auth/login', { email, password });
+      const res = await API.post('/auth/login', { identifier, password });
       const { token, user, sessionExpiresIn } = res.data;
       const sessionExpiry = sessionExpiresIn ? Date.now() + sessionExpiresIn : null;
 
@@ -103,10 +103,10 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const register = async (name, email, mobile, password) => {
+  const register = async (payload) => {
     try {
-      await API.post('/auth/register', { name, email, mobile, password });
-      toast.success('Account created! Please login.');
+      await API.post('/auth/register', payload);
+      toast.success('Registration Successful');
       return { success: true };
     } catch (err) {
       const message = err.response?.data?.message || 'Registration failed.';
@@ -124,6 +124,25 @@ export const AuthProvider = ({ children }) => {
     dispatch({ type: 'LOGOUT' });
     if (!silent) toast.success('Logged out successfully.');
   }, []);
+
+  // Auto-logout effect when session expiration is reached in real-time
+  useEffect(() => {
+    if (!state.sessionExpiry) return;
+
+    const delay = state.sessionExpiry - Date.now();
+    if (delay <= 0) {
+      toast.error('Your session has expired. Please login again.');
+      logout(true);
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      toast.error('Your session has expired. Please login again.');
+      logout(true);
+    }, delay);
+
+    return () => clearTimeout(timer);
+  }, [state.sessionExpiry, logout]);
 
   const updateUser = (updates) => dispatch({ type: 'UPDATE_USER', payload: updates });
 

@@ -22,6 +22,7 @@ const API = axios.create({
 // Auth
 export const authAPI = {
   register: (data) => API.post('/auth/register', data),
+  checkUsername: (username) => API.get('/auth/username-available', { params: { username } }),
   login: (data) => API.post('/auth/login', data),
   logout: () => API.post('/auth/logout'),
   getMe: () => API.get('/auth/me'),
@@ -103,6 +104,62 @@ export const messageAPI = {
   sendMessage: (data) => API.post('/messages', data),
   getConversations: () => API.get('/messages/conversations'),
   getChatHistory: (partnerId) => API.get(`/messages/history/${partnerId}`)
+};
+
+// ─── Car Hive: Advertisements ───
+export const adAPI = {
+  create: (data) => API.post('/ads', data),
+  getMyAds: (params) => API.get('/ads/my', { params }),
+  getAd: (id) => API.get(`/ads/${id}`),
+  deleteAd: (id) => API.delete(`/ads/${id}`)
+};
+
+// ─── Car Hive: Daily Reports ───
+export const reportAPI = {
+  submit: (data) => API.post('/reports', data),
+  getMine: () => API.get('/reports/my')
+};
+
+// ─── Car Hive: File Requests ───
+export const fileRequestAPI = {
+  getRanges: () => API.get('/file-requests/ranges'),
+  submit: (data) => API.post('/file-requests', data),
+  getMine: () => API.get('/file-requests/my'),
+  download: (id) => API.get(`/file-requests/${id}/download`, { responseType: 'blob' })
+};
+
+// ─── Car Hive: Notifications ───
+export const notificationAPI = {
+  getMine: () => API.get('/notifications'),
+  getUnreadCount: () => API.get('/notifications/unread-count'),
+  markRead: (id) => API.put(`/notifications/${id}/read`),
+  markAllRead: () => API.put('/notifications/read-all')
+};
+
+// ─── Car Hive: Announcements ───
+export const announcementAPI = {
+  getActive: () => API.get('/announcements'),
+  getAll: () => API.get('/announcements/all'),
+  create: (data) => API.post('/announcements', data),
+  update: (id, data) => API.put(`/announcements/${id}`, data),
+  remove: (id) => API.delete(`/announcements/${id}`)
+};
+
+// ─── Car Hive: Dashboard ───
+export const dashboardAPI = {
+  getUserDashboard: () => API.get('/dashboard')
+};
+
+// ─── Car Hive: Admin ───
+export const carAdminAPI = {
+  getStats: () => API.get('/car-admin/stats'),
+  getAds: (params) => API.get('/car-admin/ads', { params }),
+  deleteAd: (id) => API.delete(`/car-admin/ads/${id}`),
+  getReports: () => API.get('/car-admin/reports'),
+  getRequests: () => API.get('/car-admin/file-requests'),
+  updateRequest: (id, data) => API.put(`/car-admin/file-requests/${id}`, data),
+  broadcast: (data) => API.post('/car-admin/broadcast', data),
+  getAnalytics: () => API.get('/car-admin/analytics')
 };
 
 export default API;

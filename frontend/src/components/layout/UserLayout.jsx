@@ -2,29 +2,27 @@ import React, { useState } from 'react';
 import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuth } from '../../context/AuthContext';
-import { FiGrid, FiList, FiPlusCircle, FiUser, FiBell, FiLogOut, FiMenu, FiX, FiSettings, FiShield, FiHelpCircle, FiBookmark, FiSend, FiBriefcase } from 'react-icons/fi';
+import { FiGrid, FiTruck, FiPlusCircle, FiUser, FiBell, FiLogOut, FiMenu, FiX, FiSettings, FiShield, FiClock, FiFileText } from 'react-icons/fi';
 import Logo from '../common/Logo';
 import { ThemeToggle, Avatar } from '../common/UI';
 import NotificationBell from '../user/NotificationBell';
 
 const navItems = [
-  { to: '/dashboard', icon: FiGrid, label: 'Dashboard' },
-  { to: '/feed', icon: FiList, label: 'Feed' },
-  { to: '/create-post', icon: FiPlusCircle, label: 'Create' },
-  { to: '/bookmarks', icon: FiBookmark, label: 'Bookmarks' },
-  { to: '/proposals', icon: FiBriefcase, label: 'Proposals' },
-  { to: '/chat', icon: FiSend, label: 'Chat Desk' },
-  { to: '/notifications', icon: FiBell, label: 'Activity' },
+  { to: '/dashboard', icon: FiGrid, label: 'Home' },
+  { to: '/my-ads', icon: FiTruck, label: 'My Ads' },
+  { to: '/post-ad', icon: FiPlusCircle, label: 'Post Ads' },
+  { to: '/new-file-request', icon: FiClock, label: 'New File Request' },
+  { to: '/daily-report', icon: FiFileText, label: 'Daily Report Submit' },
+  { to: '/notifications', icon: FiBell, label: 'Notifications' },
   { to: '/profile', icon: FiUser, label: 'Profile' },
-  { to: '/support', icon: FiHelpCircle, label: 'Support Desk' },
   { to: '/settings', icon: FiSettings, label: 'Settings' },
 ];
 
 const mobileNavItems = [
-  { to: '/dashboard', icon: FiGrid, label: 'Dashboard' },
-  { to: '/feed', icon: FiList, label: 'Feed' },
-  { to: '/create-post', icon: FiPlusCircle, label: 'Create' },
-  { to: '/chat', icon: FiSend, label: 'Chat' },
+  { to: '/dashboard', icon: FiGrid, label: 'Home' },
+  { to: '/my-ads', icon: FiTruck, label: 'My Ads' },
+  { to: '/post-ad', icon: FiPlusCircle, label: 'Post' },
+  { to: '/daily-report', icon: FiFileText, label: 'Report' },
   { to: '/profile', icon: FiUser, label: 'Profile' },
 ];
 
@@ -55,7 +53,7 @@ const Sidebar = ({ open, onClose }) => {
         {/* Logo */}
         <div className="flex items-center gap-2.5 px-5 py-5" style={{ borderBottom: '1px solid var(--border)' }}>
           <Logo size={32} rounded={8} className="flex-shrink-0" />
-          <span className="font-display font-bold text-base" style={{ color: 'var(--text-primary)' }}>FreelanceHub</span>
+          <span className="font-display font-bold text-base" style={{ color: 'var(--text-primary)' }}>Car Hive</span>
           <button className="ml-auto md:hidden" onClick={onClose} style={{ color: 'var(--text-muted)' }}><FiX size={18}/></button>
         </div>
 
@@ -128,7 +126,7 @@ export default function UserLayout() {
           {/* Middle: Brand name & Logo */}
           <div className="flex items-center gap-2">
             <Logo size={24} rounded={6} />
-            <span className="font-display font-bold text-sm" style={{ color: 'var(--text-primary)' }}>FreelanceHub</span>
+            <span className="font-display font-bold text-sm" style={{ color: 'var(--text-primary)' }}>Car Hive</span>
           </div>
 
           {/* Right: Theme Toggle, Notifications, Profile Avatar */}
@@ -147,7 +145,7 @@ export default function UserLayout() {
       <nav className="mobile-bottom-nav md:hidden">
         <div className="mobile-bottom-inner">
           {mobileNavItems.map(item => {
-            if (item.to === '/create-post') {
+            if (item.to === '/post-ad') {
               return (
                 <div key={item.to} className="flex-1 flex items-center justify-center">
                   <NavLink to={item.to} className={({ isActive }) => `bottom-action ${isActive ? 'active' : ''}`}>

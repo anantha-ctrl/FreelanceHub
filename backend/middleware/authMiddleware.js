@@ -58,6 +58,7 @@ const protect = async (req, res, next) => {
 
     req.user = user;
     req.tokenId = decoded.tokenId;
+    req.tokenExpiry = decoded.exp ? decoded.exp * 1000 : null;
     next();
   } catch (err) {
     console.error('Auth middleware error:', err);

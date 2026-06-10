@@ -3,6 +3,12 @@ const { v4: uuidv4 } = require('uuid');
 const { Op } = require('sequelize');
 const { User, LoginLog } = require('../models');
 const { normalize } = require('../utils/dbUtils');
+const { notify } = require('../services/notificationService');
+const { logAudit } = require('../utils/auditLogger');
+
+// Password policy: min 8 chars, at least one letter and one number.
+const isStrongPassword = (pwd) =>
+  typeof pwd === 'string' && pwd.length >= 8 && /[A-Za-z]/.test(pwd) && /[0-9]/.test(pwd);
 
 const generateToken = (userId, tokenId, expiresIn) => {
   const options = {};
@@ -27,47 +33,128 @@ const getClientInfo = (req) => {
 const register = async (req, res) => {
   try {
     const name = req.body.name?.trim();
+    const username = req.body.username?.trim();
     const email = req.body.email?.trim()?.toLowerCase();
     const mobile = req.body.mobile?.trim();
-    const { password } = req.body;
+    const address = req.body.address?.trim() || '';
+    const dob = req.body.dob || null;
+    const { password, confirmPassword } = req.body;
 
-    if (!email || !password) {
-      return res.status(400).json({ success: false, message: 'Email and password are required.' });
+    // ─── Required fields ───
+    if (!name || !username || !email || !mobile || !password) {
+      return res.status(400).json({ success: false, message: 'All required fields must be filled.' });
     }
 
-    const existing = await User.findOne({ where: { email } });
-    if (existing) {
-      return res.status(400).json({ success: false, message: 'Email already registered.' });
+    // ─── Password strength + match ───
+    if (!isStrongPassword(password)) {
+      return res.status(400).json({ success: false, message: 'Password must be at least 8 characters and include letters and numbers.' });
+    }
+    if (confirmPassword !== undefined && password !== confirmPassword) {
+      return res.status(400).json({ success: false, message: 'Passwords do not match.' });
     }
 
-    const user = await User.create({ name, email, mobile, password });
+    // ─── Uniqueness: username, email, mobile ───
+    const clash = await User.findOne({
+      where: { [Op.or]: [{ email }, { username }, { mobile }] }
+    });
+    if (clash) {
+      let field = 'Email';
+      if (clash.username && clash.username === username) field = 'Username';
+      else if (clash.mobile === mobile) field = 'Mobile number';
+      else if (clash.email === email) field = 'Email';
+      return res.status(400).json({ success: false, message: `${field} is already registered.` });
+    }
+
+    const user = await User.create({ name, username, email, mobile, address, dob, password });
+
+    // ─── Welcome notifications (email + SMS + WhatsApp + in-app) ───
+    notify({
+      userId: user.id,
+      title: 'Welcome to Car Hive 🚗',
+      message: `Hi ${name}, your Car Hive Freelancer account (@${username}) has been created successfully. You can now post vehicle ads, submit daily reports, and request new file assignments.`,
+      type: 'success',
+      channels: ['in-app', 'email', 'sms', 'whatsapp'],
+      email,
+      mobile,
+      subject: 'Welcome to Car Hive Freelancer Platform',
+      emailHtml: `
+        <div style="font-family:Arial,sans-serif;max-width:560px;margin:auto">
+          <h2 style="color:#3b82f6">Welcome to Car Hive, ${name}!</h2>
+          <p>Your freelancer account has been created successfully.</p>
+          <table style="font-size:14px;color:#333">
+            <tr><td><b>Username:</b></td><td>${username}</td></tr>
+            <tr><td><b>Email:</b></td><td>${email}</td></tr>
+            <tr><td><b>Mobile:</b></td><td>${mobile}</td></tr>
+          </table>
+          <p>You can now log in and start posting vehicle advertisements, submitting daily reports, and requesting new file assignments.</p>
+          <p style="color:#888;font-size:12px">— Car Hive Freelancer Platform</p>
+        </div>`
+    }).catch(() => {});
+
+    logAudit({ action: 'REGISTER', details: `New freelancer registered: @${username} (${email})`, userId: user.id, req });
 
     res.status(201).json({
       success: true,
-      message: 'Account created successfully. Please login.',
-      user: { _id: user.id, name: user.name, email: user.email }
+      message: 'Registration Successful',
+      user: { _id: user.id, name: user.name, username: user.username, email: user.email }
     });
   } catch (err) {
+    if (err.name === 'SequelizeUniqueConstraintError') {
+      const f = err.errors?.[0]?.path || 'field';
+      const label = f.includes('username') ? 'Username' : f.includes('mobile') ? 'Mobile number' : 'Email';
+      return res.status(400).json({ success: false, message: `${label} is already registered.` });
+    }
     if (err.name === 'SequelizeValidationError') {
-      const messages = err.errors.map(e => e.message);
-      return res.status(400).json({ success: false, message: messages[0] });
+      return res.status(400).json({ success: false, message: err.errors.map(e => e.message)[0] });
     }
     console.error('Register error:', err);
     res.status(500).json({ success: false, message: 'Registration failed.' });
   }
 };
 
+// GET /api/auth/username-available?username=foo
+// Real-time uniqueness check used by the registration form. When the requested
+// username is taken it returns a free suggestion (base + random digits).
+const checkUsername = async (req, res) => {
+  try {
+    const username = (req.query.username || '').trim();
+    if (username.length < 3) {
+      return res.json({ success: true, available: false, tooShort: true, message: 'Username must be at least 3 characters.' });
+    }
+    const existing = await User.findOne({ where: { username } });
+    if (!existing) {
+      return res.json({ success: true, available: true });
+    }
+    // Find a free suggestion based on the requested name.
+    let suggestion = '';
+    for (let i = 0; i < 50; i++) {
+      const cand = `${username}${Math.floor(100 + Math.random() * 900)}`;
+      // eslint-disable-next-line no-await-in-loop
+      const taken = await User.findOne({ where: { username: cand } });
+      if (!taken) { suggestion = cand; break; }
+    }
+    return res.json({ success: true, available: false, suggestion });
+  } catch (err) {
+    console.error('Check username error:', err);
+    res.status(500).json({ success: false, message: 'Failed to check username.' });
+  }
+};
+
 const login = async (req, res) => {
   try {
-    const email = req.body.email?.trim()?.toLowerCase();
+    // Accept login by username OR email (Car Hive uses username).
+    const identifier = (req.body.username || req.body.email || req.body.identifier || '').trim();
     const { password } = req.body;
     const { ip, ua } = getClientInfo(req);
 
-    if (!email || !password) {
-      return res.status(400).json({ success: false, message: 'Email and password are required.' });
+    if (!identifier || !password) {
+      return res.status(400).json({ success: false, message: 'Username/email and password are required.' });
     }
 
-    const user = await User.scope('withPassword').findOne({ where: { email } });
+    const lower = identifier.toLowerCase();
+    const user = await User.scope('withPassword').findOne({
+      where: { [Op.or]: [{ email: lower }, { username: identifier }] }
+    });
     if (!user) {
       return res.status(401).json({ success: false, message: 'Invalid credentials.' });
     }
@@ -147,7 +234,11 @@ const getMe = async (req, res) => {
       return res.json({ success: false, message: 'Not authenticated.' });
     }
     const user = await User.findByPk(req.user.id);
-    res.json({ success: true, user: normalize(user) });
+    res.json({ 
+      success: true, 
+      user: normalize(user),
+      sessionExpiry: req.tokenExpiry
+    });
   } catch (err) {
     res.status(500).json({ success: false, message: 'Failed to fetch profile.' });
   }
@@ -270,4 +361,4 @@ const resetPassword = async (req, res) => {
   }
 };
 
-module.exports = { register, login, logout, getMe, updateProfile, changePassword, forgotPassword, resetPassword };
+module.exports = { register, login, logout, getMe, updateProfile, changePassword, forgotPassword, resetPassword, checkUsername };

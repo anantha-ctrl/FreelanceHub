@@ -11,20 +11,20 @@ import Register from './pages/auth/Register';
 import ForgotPassword from './pages/auth/ForgotPassword';
 import ResetPassword from './pages/auth/ResetPassword';
 
-// Pages - User
+// Pages - User (shared with admin routes)
 import UserLayout from './components/layout/UserLayout';
-import Dashboard from './pages/user/Dashboard';
 import Feed from './pages/user/Feed';
-import CreatePost from './pages/user/CreatePost';
 import Profile from './pages/user/Profile';
-import Notifications from './pages/user/Notifications';
-import EditPost from './pages/user/EditPost';
-import SupportDesk from './pages/user/SupportDesk';
 import Settings from './pages/user/Settings';
-import Bookmarks from './pages/user/Bookmarks';
-import Proposals from './pages/user/Proposals';
-import Chat from './pages/user/Chat';
-import PostDetail from './pages/user/PostDetail';
+
+// Pages - Car Hive
+import CarDashboard from './pages/carhive/Dashboard';
+import MyAds from './pages/carhive/MyAds';
+import PostAd from './pages/carhive/PostAd';
+import NewFileRequest from './pages/carhive/NewFileRequest';
+import DailyReport from './pages/carhive/DailyReport';
+import CarNotifications from './pages/carhive/Notifications';
+import CarAdminDashboard from './pages/carhive/AdminDashboard';
 
 // Pages - Admin
 import AdminLayout from './components/layout/AdminLayout';
@@ -60,7 +60,7 @@ const PageLoader = () => (
   <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-primary)' }}>
     <div style={{ textAlign: 'center' }}>
       <div style={{ width: 40, height: 40, border: '3px solid var(--border)', borderTopColor: 'var(--neon)', borderRadius: '50%', animation: 'spin 0.8s linear infinite', margin: '0 auto 12px' }}></div>
-      <p style={{ color: 'var(--text-muted)', fontSize: 13 }}>Loading FreelanceHub...</p>
+      <p style={{ color: 'var(--text-muted)', fontSize: 13 }}>Loading Car Hive...</p>
     </div>
   </div>
 );
@@ -94,25 +94,22 @@ function App() {
             <Route path="/forgot-password" element={<PublicRoute><ForgotPassword /></PublicRoute>} />
             <Route path="/reset-password" element={<PublicRoute><ResetPassword /></PublicRoute>} />
 
-            {/* User routes */}
+            {/* User routes — Car Hive */}
             <Route path="/" element={<ProtectedRoute><UserLayout /></ProtectedRoute>}>
-              <Route path="dashboard" element={<Dashboard />} />
-              <Route path="feed" element={<Feed />} />
-              <Route path="create-post" element={<CreatePost />} />
-              <Route path="edit-post/:id" element={<EditPost />} />
+              <Route path="dashboard" element={<CarDashboard />} />
+              <Route path="my-ads" element={<MyAds />} />
+              <Route path="post-ad" element={<PostAd />} />
+              <Route path="new-file-request" element={<NewFileRequest />} />
+              <Route path="daily-report" element={<DailyReport />} />
+              <Route path="notifications" element={<CarNotifications />} />
               <Route path="profile" element={<Profile />} />
-              <Route path="notifications" element={<Notifications />} />
-              <Route path="support" element={<SupportDesk />} />
               <Route path="settings" element={<Settings />} />
-              <Route path="bookmarks" element={<Bookmarks />} />
-              <Route path="proposals" element={<Proposals />} />
-              <Route path="chat" element={<Chat />} />
-              <Route path="post/:id" element={<PostDetail />} />
             </Route>
 
             {/* Admin routes */}
             <Route path="/admin" element={<ProtectedRoute adminOnly><AdminLayout /></ProtectedRoute>}>
-              <Route index element={<AdminDashboard />} />
+              <Route index element={<CarAdminDashboard />} />
+              <Route path="legacy" element={<AdminDashboard />} />
               <Route path="posts" element={<AdminPosts />} />
               <Route path="feed" element={<Feed />} />
               <Route path="users" element={<AdminUsers />} />
